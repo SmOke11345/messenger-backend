@@ -1,0 +1,57 @@
+{
+  "name": "messenger-backend",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/messenger-backend/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/messenger-backend",
+        "main": "apps/messenger-backend/src/main.ts",
+        "tsConfig": "apps/messenger-backend/tsconfig.app.json",
+        "assets": ["apps/messenger-backend/src/assets"],
+        "isolatedConfig": true,
+        "webpackConfig": "apps/messenger-backend/webpack.config.js"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "messenger-backend:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "messenger-backend:build:development"
+        },
+        "production": {
+          "buildTarget": "messenger-backend:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/messenger-backend/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/messenger-backend/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

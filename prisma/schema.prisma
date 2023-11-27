@@ -7,13 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// TODO: создать таблицу Friend и связать ее с полем friends в таблице Users, это нужно чтобы потом выводить друзей пользователя по id;
-
 model Users {
-  id          Int     @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String
   lastname    String?
   password    String
   profile_img String?
   email       String
+  friends     Friends[]
+}
+
+model Friends {
+  id        Int   @id @default(autoincrement())
+  friend_id Int
+  friend    Users @relation(fields: [friend_id], references: [id])
 }

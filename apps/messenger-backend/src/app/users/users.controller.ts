@@ -51,9 +51,9 @@ export class UsersController {
      * @param filename
      * @param res
      */
-    @Get("upload:filename")
+    @Get("upload/:filename")
     async getFile(@Param("filename") filename: string, @Res() res: any) {
-        res.sendFile(filename, {
+        return res.sendFile(filename, {
             root: "./apps/messenger-backend/src/assets/profile_img",
         });
     }

@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+
 import { CreateUserDto } from "../dto/CreateUserDto.dto";
 import { PrismaService } from "../prisma/prisma.service";
 import { jwtConstants } from "./utils/constants";
@@ -78,18 +79,15 @@ export class AuthService {
     }
 
     /**
-     * Аутентификация пользователя
-     * Принимает данные пользователя после удачной аутентификации и возвращает токен
+     * Аутентификация пользователя.
+     * Получает данные пользователя после удачной аутентификации и возвращает токен
      * @param user
      */
     async singIn(user: any) {
-        // Создаем токен
-        const token = await this.generateToken({
+        // Создаем в возвращаем токен
+        return await this.generateToken({
             sub: user.id,
             email: user.email,
         });
-
-        // Возвращаем токен
-        return { access_token: token };
     }
 }

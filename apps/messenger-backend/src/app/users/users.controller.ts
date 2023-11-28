@@ -8,8 +8,9 @@ import {
     UploadedFile,
     UseInterceptors,
 } from "@nestjs/common";
-import { UsersService } from "./users.service";
 import { FileInterceptor } from "@nestjs/platform-express";
+
+import { UsersService } from "./users.service";
 
 import multer from "multer";
 
@@ -37,6 +38,8 @@ export class UsersController {
     async getData() {
         return this.usersService.getData();
     }
+
+    // TODO: Сделать запрос для получения списка друзей пользователя
 
     /**
      * Запрос для загрузки изображений

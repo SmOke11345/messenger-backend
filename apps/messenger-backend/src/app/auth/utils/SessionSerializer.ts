@@ -1,7 +1,8 @@
 import { PassportSerializer } from "@nestjs/passport";
+import { Inject } from "@nestjs/common";
+
 import { UsersService } from "../../users/users.service";
 import { User } from "../../models/UserTypes";
-import { Inject } from "@nestjs/common";
 
 // TODO: Сделать сохранение сессии
 export class SessionSerializer extends PassportSerializer {
@@ -35,7 +36,7 @@ export class SessionSerializer extends PassportSerializer {
     async deserializeUser(user: User, done: (error: any, user: User) => void) {
         console.log("DeserializeUser");
         const user_DB = await this.userService.findUserById(user.id);
-        // Если пользователь был найдет, то возвращаем его сериализованные данные, иначе возвращаем null
+        // Если пользователь был найден, то возвращаем его сериализованные данные, иначе возвращаем null
         return user_DB ? done(null, user_DB) : done(null, null);
     }
 }

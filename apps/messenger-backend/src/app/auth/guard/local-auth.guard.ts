@@ -7,7 +7,7 @@ export class LocalAuthGuard extends AuthGuard("local") {
         // Когда дело доходит до входа пользователя в систему
         const result = (await super.canActivate(context)) as boolean;
 
-        // Получаем запрос который был отправлен
+        // Получаем запрос, который был отправлен
         const request = context.switchToHttp().getRequest();
 
         // Входим в систему используя passport

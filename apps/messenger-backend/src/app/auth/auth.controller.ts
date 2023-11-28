@@ -1,7 +1,3 @@
-import { CreateUserDto } from "../dto/CreateUserDto.dto";
-import { AuthService } from "./auth.service";
-import { JwtAuthGuard } from "./guard/auth.guard";
-import { LocalAuthGuard } from "./guard/local-auth.guard";
 import {
     Body,
     Controller,
@@ -14,13 +10,18 @@ import {
     UseGuards,
 } from "@nestjs/common";
 
+import { CreateUserDto } from "../dto/CreateUserDto.dto";
+import { AuthService } from "./auth.service";
+import { JwtAuthGuard } from "./guard/auth.guard";
+import { LocalAuthGuard } from "./guard/local-auth.guard";
+
 @Controller("auth")
 export class AuthController {
     constructor(@Inject("AUTH_SERVICE") private authService: AuthService) {}
 
     @Post("register")
     async register(@Body() user: CreateUserDto) {
-        // Ищим email введенный пользователем в базе данных
+        // Ищем email введенный пользователем в базе данных
         const _user = await this.authService.getUserEmail(user.email);
         // Если email уже существует, выбрасываем ошибку
         if (_user) {
@@ -36,11 +37,19 @@ export class AuthController {
     /**
      * Аутентификация пользователя
      * @param request
+     * @param session
      */
     @UseGuards(LocalAuthGuard)
     @Post("login")
-    async login(@Request() request: any) {
-        return this.authService.singIn(request);
+    async login(
+        @Request() request: any,
+        @Session() session: Record<string, any>,
+    ) {
+        const token = await this.authService.singIn(request);
+        return {
+            access_token: token,
+            data: session,
+        };
     }
 
     /**

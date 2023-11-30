@@ -46,6 +46,7 @@ export class AuthController {
         @Session() session: Record<string, any>,
     ) {
         const token = await this.authService.singIn(request);
+
         return {
             access_token: token,
             data: session,
@@ -64,11 +65,7 @@ export class AuthController {
         // TODO: Продолжить делать сохранение сессии о пользователе
         @Session() session: Record<string, any>,
     ) {
-        // console.log(request.user);
-        // console.log(request);
-
-        // Изменения происходят сразу, как только мы изменим объект сессии
-        session.authenticated = true;
+        session.authenticated = true; // Изменения происходят сразу, как только мы изменим объект сессии
 
         // Получаем токен который мы сохранили в auth.guard.ts
         return {

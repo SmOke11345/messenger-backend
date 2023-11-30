@@ -3,9 +3,13 @@ import {
     Get,
     Inject,
     Param,
+    Patch,
     Post,
+    Query,
     Res,
+    Session,
     UploadedFile,
+    UseGuards,
     UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
@@ -13,6 +17,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { UsersService } from "./users.service";
 
 import multer from "multer";
+import { JwtAuthGuard } from "../auth/guard/auth.guard";
 
 /**
  * Создания хранилища файлов
@@ -34,12 +39,43 @@ export class UsersController {
     /**
      * Получение данных всех зарегистрированных пользователей из базы данных
      */
+
     @Get("")
     async getData() {
         return this.usersService.getData();
     }
 
-    // TODO: Сделать запрос для получения списка друзей пользователя
+    /**
+     * Получение друзей
+     */
+    @Get("friends")
+    async getFriends(@Query("id") id: number) {
+        id = Number(id); // Query параметр передает строковые значения, а нам нужны числовые
+        const user = await this.usersService.findUserById(id);
+
+        // TODO: Вернуть массив друзей пользователя
+        return {
+            user: user.friends,
+        };
+    }
+
+    /**
+     * Добавление друзей
+     * @param id
+     * @param session
+     */
+    @UseGuards(JwtAuthGuard)
+    @Patch("friends/add")
+    async addFriend(
+        @Query("id") id: number,
+        @Session() session: Record<string, any>,
+    ) {
+        id = Number(id); // Query параметр передает строковые значения, а нам нужны числовые
+        const user = await this.usersService.findUserById(id);
+        const authUser = Number(session.passport.user.id); // Получаем id вошедшего пользователя
+
+        return this.usersService.addFriend(authUser, user);
+    }
 
     /**
      * Запрос для загрузки изображений

@@ -50,10 +50,9 @@ export class UsersController {
      */
     @Get("friends")
     async getFriends(@Query("id") id: number) {
-        id = Number(id); // Query параметр передает строковые значения, а нам нужны числовые
-        const user = await this.usersService.findUserById(id);
+        // Query параметр передает строковые значения, а нам нужны числовые
+        const user = await this.usersService.findUserById(+id);
 
-        // TODO: Вернуть массив друзей пользователя
         return {
             user: user.friends,
         };
@@ -70,11 +69,31 @@ export class UsersController {
         @Query("id") id: number,
         @Session() session: Record<string, any>,
     ) {
-        id = Number(id); // Query параметр передает строковые значения, а нам нужны числовые
-        const user = await this.usersService.findUserById(id);
+        // TODO: Упростить, если это возможно, повторяющиеся строчки кода
+        // Query параметр передает строковые значения, а нам нужны числовые
+        const user = await this.usersService.findUserById(+id);
         const authUser = Number(session.passport.user.id); // Получаем id вошедшего пользователя
 
         return this.usersService.addFriend(authUser, user);
+    }
+
+    /**
+     * Удаление друзей
+     * @param id
+     * @param session
+     */
+    @UseGuards(JwtAuthGuard)
+    @Patch("friends/delete")
+    async deleteFriend(
+        @Query("id") id: number,
+        @Session() session: Record<string, any>,
+    ) {
+        // TODO: Упростить, если это возможно, повторяющиеся строчки кода
+        // Query параметр передает строковые значения, а нам нужны числовые
+        const user = await this.usersService.findUserById(+id);
+        const authUser = Number(session.passport.user.id); // Получаем id вошедшего пользователя
+
+        return this.usersService.deleteFriend(authUser, user);
     }
 
     /**

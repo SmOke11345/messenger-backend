@@ -3,11 +3,9 @@ import {
     Get,
     Inject,
     Param,
-    Patch,
     Post,
-    Query,
+    Request,
     Res,
-    Session,
     UploadedFile,
     UseGuards,
     UseInterceptors,
@@ -15,9 +13,9 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 
 import { UsersService } from "./users.service";
+import { JwtAuthGuard } from "../auth/guard/auth.guard";
 
 import multer from "multer";
-import { JwtAuthGuard } from "../auth/guard/auth.guard";
 
 /**
  * Создания хранилища файлов
@@ -48,50 +46,45 @@ export class UsersController {
     /**
      * Получение друзей
      */
-    @Get("friends")
-    async getFriends(@Query("id") id: number) {
+    @Get("friends/:id")
+    async getFriends(@Param("id") id: string) {
         // Query параметр передает строковые значения, а нам нужны числовые
         const user = await this.usersService.findUserById(+id);
 
-        return {
-            user: user.friends,
-        };
+        return user.friends;
     }
 
     /**
      * Добавление друзей
-     * @param id
-     * @param session
+
+     * @param request
      */
     @UseGuards(JwtAuthGuard)
-    @Patch("friends/add")
-    async addFriend(
-        @Query("id") id: number,
-        @Session() session: Record<string, any>,
-    ) {
+    @Post("friends/add")
+    async addFriend(@Request() request: any) {
         // TODO: Упростить, если это возможно, повторяющиеся строчки кода
         // Query параметр передает строковые значения, а нам нужны числовые
-        const user = await this.usersService.findUserById(+id);
-        const authUser = Number(session.passport.user.id); // Получаем id вошедшего пользователя
+        const user = await this.usersService.findUserById(
+            request.body.friend_id,
+        );
+        const authUser = request.body.auth_user; // Получаем id вошедшего пользователя
 
         return this.usersService.addFriend(authUser, user);
     }
 
     /**
      * Удаление друзей
-     * @param id
-     * @param session
+     * @param request
      */
     @UseGuards(JwtAuthGuard)
-    @Patch("friends/delete")
-    async deleteFriend(
-        @Query("id") id: number,
-        @Session() session: Record<string, any>,
-    ) {
+    @Post("friends/delete")
+    async deleteFriend(@Request() request: any) {
         // TODO: Упростить, если это возможно, повторяющиеся строчки кода
         // Query параметр передает строковые значения, а нам нужны числовые
-        const user = await this.usersService.findUserById(+id);
-        const authUser = Number(session.passport.user.id); // Получаем id вошедшего пользователя
+        const user = await this.usersService.findUserById(
+            request.body.friend_id,
+        );
+        const authUser = request.body.auth_user; // Получаем id вошедшего пользователя
 
         return this.usersService.deleteFriend(authUser, user);
     }

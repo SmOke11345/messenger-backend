@@ -52,11 +52,7 @@ export class UsersService {
      */
     async deleteFriend(authUser: number, user: User) {
         // Получаем все данные пользователя
-        const foundUser = await this.prismaService.users.findFirst({
-            where: {
-                id: authUser,
-            },
-        });
+        const foundUser = await this.findUserById(authUser);
 
         // Используется для обновления данных пользователя
         return await this.prismaService.users.update({

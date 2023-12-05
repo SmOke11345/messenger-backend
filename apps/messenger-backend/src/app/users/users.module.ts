@@ -29,6 +29,5 @@ import { JwtService } from "@nestjs/jwt";
         PrismaService,
         SessionSerializer,
     ],
-    exports: [],
 })
 export class UsersModule {}

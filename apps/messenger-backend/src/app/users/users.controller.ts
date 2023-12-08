@@ -37,7 +37,6 @@ export class UsersController {
     /**
      * Получение данных всех зарегистрированных пользователей из базы данных
      */
-
     @Get("")
     async getData() {
         return this.usersService.getData();
@@ -56,7 +55,6 @@ export class UsersController {
 
     /**
      * Добавление друзей
-
      * @param request
      */
     @UseGuards(JwtAuthGuard)
@@ -64,10 +62,8 @@ export class UsersController {
     async addFriend(@Request() request: any) {
         // TODO: Упростить, если это возможно, повторяющиеся строчки кода
         // Query параметр передает строковые значения, а нам нужны числовые
-        const user = await this.usersService.findUserById(
-            request.body.friend_id,
-        );
-        const authUser = request.body.auth_user; // Получаем id вошедшего пользователя
+        const user = await this.usersService.findUserById(request.body.id);
+        const authUser = request.body.auth_user_id; // Получаем id вошедшего пользователя
 
         return this.usersService.addFriend(authUser, user);
     }
@@ -81,10 +77,8 @@ export class UsersController {
     async deleteFriend(@Request() request: any) {
         // TODO: Упростить, если это возможно, повторяющиеся строчки кода
         // Query параметр передает строковые значения, а нам нужны числовые
-        const user = await this.usersService.findUserById(
-            request.body.friend_id,
-        );
-        const authUser = request.body.auth_user; // Получаем id вошедшего пользователя
+        const user = await this.usersService.findUserById(request.body.id);
+        const authUser = request.body.auth_user_id; // Получаем id вошедшего пользователя
 
         return this.usersService.deleteFriend(authUser, user);
     }

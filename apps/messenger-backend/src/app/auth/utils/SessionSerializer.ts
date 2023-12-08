@@ -4,7 +4,6 @@ import { Inject } from "@nestjs/common";
 import { UsersService } from "../../users/users.service";
 import { User } from "../../models/UserTypes";
 
-// TODO: Сделать сохранение сессии
 export class SessionSerializer extends PassportSerializer {
     constructor(
         @Inject("USER_SERVICE") private readonly userService: UsersService,

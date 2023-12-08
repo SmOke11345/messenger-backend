@@ -62,7 +62,6 @@ export class AuthController {
     @Get("chats")
     async getDataUser(
         @Request() request: any,
-        // TODO: Продолжить делать сохранение сессии о пользователе
         @Session() session: Record<string, any>,
     ) {
         session.authenticated = true; // Изменения происходят сразу, как только мы изменим объект сессии

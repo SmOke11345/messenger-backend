@@ -13,6 +13,6 @@ model Users {
   lastname    String?
   password    String
   profile_img String?
-  email       String
+  login       String
   friends     Json[]
 }

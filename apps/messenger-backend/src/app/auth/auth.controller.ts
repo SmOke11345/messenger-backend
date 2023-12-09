@@ -22,10 +22,10 @@ export class AuthController {
     @Post("register")
     async register(@Body() user: CreateUserDto) {
         // Ищем email введенный пользователем в базе данных
-        const _user = await this.authService.getUserEmail(user.email);
+        const _user = await this.authService.getUserEmail(user.login);
         // Если email уже существует, выбрасываем ошибку
         if (_user) {
-            throw new ForbiddenException(`Email ${_user.email} already exists`);
+            throw new ForbiddenException(`Login ${_user.login} already exists`);
         }
 
         // Если такого email не существует, создаем нового

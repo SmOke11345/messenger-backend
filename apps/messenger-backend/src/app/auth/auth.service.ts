@@ -37,22 +37,22 @@ export class AuthService {
 
     /**
      * Получение email пользователя из базы данных
-     * @param email
+     * @param login
      */
-    getUserEmail(email: string) {
+    getUserEmail(login: string) {
         return this.prismaService.users.findFirst({
             where: {
-                email,
+                login,
             },
         });
     }
 
-    async validateUser(email: string, password: string) {
-        const user = await this.getUserEmail(email);
+    async validateUser(login: string, password: string) {
+        const user = await this.getUserEmail(login);
 
         // Если такого email не существует
         if (user === null) {
-            throw new UnauthorizedException("Email not found");
+            throw new UnauthorizedException("Login not found");
         }
 
         // Расхэшироваем пароль и сравниваем его с введенным
@@ -87,7 +87,7 @@ export class AuthService {
         // Создаем в возвращаем токен
         return await this.generateToken({
             sub: user.id,
-            email: user.email,
+            login: user.login,
         });
     }
 }

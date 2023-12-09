@@ -11,21 +11,21 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         // Изначально ожидает получить username и password,
         // меняем это поведение и ожидаем получить
         super({
-            usernameField: "email",
+            usernameField: "login",
             passwordField: "password",
         });
     }
 
     /**
      * Используется для вывода данных о пользователе, после успешной аутентификации
-     * @param email
+     * @param login
      * @param password
      */
-    async validate(email: string, password: string) {
+    async validate(login: string, password: string) {
         // Проверяет есть ли такой email в базе данных и совпадает ли пароль
-        const user = await this.authService.validateUser(email, password);
+        const user = await this.authService.validateUser(login, password);
         if (!user) {
-            throw new UnauthorizedException("Email not found");
+            throw new UnauthorizedException("Login not found");
         }
         return user;
     }

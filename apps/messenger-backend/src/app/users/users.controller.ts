@@ -2,6 +2,7 @@ import {
     Controller,
     Get,
     Inject,
+    NotFoundException,
     Param,
     Post,
     Request,
@@ -50,19 +51,27 @@ export class UsersController {
         // Query параметр передает строковые значения, а нам нужны числовые
         const user = await this.usersService.findUserById(+id);
 
+        // Если массив с друзьями пуст выдаем ошибку
+        if (user.friends.length === 0) {
+            throw new NotFoundException("You haven't added any friends yet!");
+        }
+
+        // TODO: Настроить получение данных, если у пользователя есть уже этот пользователь в списке друзей, то не возвращать его.
+
         return user.friends;
     }
 
     /**
      * Добавление друзей
+     * @param id
      * @param request
      */
     @UseGuards(JwtAuthGuard)
-    @Post("friends/add")
-    async addFriend(@Request() request: any) {
+    @Post("friends/add/:id")
+    async addFriend(@Param("id") id: string, @Request() request: any) {
         // TODO: Упростить, если это возможно, повторяющиеся строчки кода
         // Query параметр передает строковые значения, а нам нужны числовые
-        const user = await this.usersService.findUserById(request.body.id);
+        const user = await this.usersService.findUserById(+id);
         const authUser = request.body.auth_user_id; // Получаем id вошедшего пользователя
 
         return this.usersService.addFriend(authUser, user);
@@ -70,14 +79,15 @@ export class UsersController {
 
     /**
      * Удаление друзей
+     * @param id
      * @param request
      */
     @UseGuards(JwtAuthGuard)
-    @Post("friends/delete")
-    async deleteFriend(@Request() request: any) {
+    @Post("friends/delete/:id")
+    async deleteFriend(@Param("id") id: string, @Request() request: any) {
         // TODO: Упростить, если это возможно, повторяющиеся строчки кода
         // Query параметр передает строковые значения, а нам нужны числовые
-        const user = await this.usersService.findUserById(request.body.id);
+        const user = await this.usersService.findUserById(+id);
         const authUser = request.body.auth_user_id; // Получаем id вошедшего пользователя
 
         return this.usersService.deleteFriend(authUser, user);

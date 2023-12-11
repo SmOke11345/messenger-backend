@@ -9,8 +9,8 @@ export class UsersService {
     /**
      * Получение всех пользователей из базы данных
      */
-    getData() {
-        return this.prismaService.users.findMany();
+    async getAllUsers() {
+        return await this.prismaService.users.findMany();
     }
 
     /**

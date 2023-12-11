@@ -5,6 +5,7 @@ import {
     NotFoundException,
     Param,
     Post,
+    Query,
     Request,
     Res,
     UploadedFile,
@@ -35,12 +36,27 @@ const storage = multer.diskStorage({
 export class UsersController {
     constructor(@Inject("USER_SERVICE") private usersService: UsersService) {}
 
+    // TODO: Начать делать поиск пользователя по имени в contacts и find-friends
     /**
      * Получение данных всех зарегистрированных пользователей из базы данных
      */
     @Get("")
-    async getData() {
-        return this.usersService.getData();
+    async getAllUsers(@Query("id") id: string) {
+        const { friends } = await this.usersService.findUserById(+id);
+        const allUsers = await this.usersService.getAllUsers();
+
+        // Удаляем из общего списка пользователей, которые уже есть в списке друзей.
+        console.log(friends.length);
+
+        if (friends.length === 0) {
+            return allUsers;
+        }
+
+        return allUsers.filter((same) => {
+            // Some -- "проверяет, удовлетворяет ли какой-либо элемент массива условию, заданному в передаваемой функции".
+            // => Если true то данные не попадают в новый массив благодаря методу filter.
+            return !friends.some((friend: any) => same.id === friend.id);
+        });
     }
 
     /**
@@ -48,17 +64,15 @@ export class UsersController {
      */
     @Get("friends/:id")
     async getFriends(@Param("id") id: string) {
-        // Query параметр передает строковые значения, а нам нужны числовые
-        const user = await this.usersService.findUserById(+id);
+        // Параметры передаваемые в строку запроса являются строковым типом => нужно преобразовать в числовой
+        const { friends } = await this.usersService.findUserById(+id);
 
         // Если массив с друзьями пуст выдаем ошибку
-        if (user.friends.length === 0) {
+        if (friends.length === 0) {
             throw new NotFoundException("You haven't added any friends yet!");
         }
 
-        // TODO: Настроить получение данных, если у пользователя есть уже этот пользователь в списке друзей, то не возвращать его.
-
-        return user.friends;
+        return friends;
     }
 
     /**
@@ -72,9 +86,9 @@ export class UsersController {
         // TODO: Упростить, если это возможно, повторяющиеся строчки кода
         // Query параметр передает строковые значения, а нам нужны числовые
         const user = await this.usersService.findUserById(+id);
-        const authUser = request.body.auth_user_id; // Получаем id вошедшего пользователя
+        const { auth_user_id } = request.body; // Получаем id вошедшего пользователя
 
-        return this.usersService.addFriend(authUser, user);
+        return this.usersService.addFriend(auth_user_id, user);
     }
 
     /**
@@ -88,9 +102,9 @@ export class UsersController {
         // TODO: Упростить, если это возможно, повторяющиеся строчки кода
         // Query параметр передает строковые значения, а нам нужны числовые
         const user = await this.usersService.findUserById(+id);
-        const authUser = request.body.auth_user_id; // Получаем id вошедшего пользователя
+        const { auth_user_id } = request.body; // Получаем id вошедшего пользователя
 
-        return this.usersService.deleteFriend(authUser, user);
+        return this.usersService.deleteFriend(auth_user_id, user);
     }
 
     /**

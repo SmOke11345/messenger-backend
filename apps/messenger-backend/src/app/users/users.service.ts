@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { User } from "../models/UserTypes";
 
@@ -11,6 +11,37 @@ export class UsersService {
      */
     async getAllUsers() {
         return await this.prismaService.users.findMany();
+    }
+
+    /**
+     * Поиск пользователя по имени или фамилии
+     * @param q
+     */
+    async getSearchUsers(q: string) {
+        const users = await this.prismaService.users.findMany({
+            where: {
+                OR: [
+                    {
+                        name: {
+                            contains: q,
+                        },
+                    },
+                    {
+                        lastname: {
+                            contains: q,
+                        },
+                    },
+                ],
+            },
+        });
+
+        console.log(users);
+
+        if (users.length === 0) {
+            throw new NotFoundException("Users not found");
+        }
+
+        return users;
     }
 
     /**

@@ -36,27 +36,34 @@ const storage = multer.diskStorage({
 export class UsersController {
     constructor(@Inject("USER_SERVICE") private usersService: UsersService) {}
 
-    // TODO: Начать делать поиск пользователя по имени в contacts и find-friends
     /**
-     * Получение данных всех зарегистрированных пользователей из базы данных
+     * Получение данных всех пользователей
      */
     @Get("")
     async getAllUsers(@Query("id") id: string) {
         const { friends } = await this.usersService.findUserById(+id);
         const allUsers = await this.usersService.getAllUsers();
 
-        // Удаляем из общего списка пользователей, которые уже есть в списке друзей.
-        console.log(friends.length);
-
         if (friends.length === 0) {
             return allUsers;
         }
 
+        // Удаляем из общего списка пользователей, которые уже есть в списке друзей.
         return allUsers.filter((same) => {
             // Some -- "проверяет, удовлетворяет ли какой-либо элемент массива условию, заданному в передаваемой функции".
             // => Если true то данные не попадают в новый массив благодаря методу filter.
             return !friends.some((friend: any) => same.id === friend.id);
         });
+    }
+
+    /**
+     * Поиск пользователя по имени или фамилии
+     * @param q
+     */
+    @Get("search")
+    async getSearchUsers(@Query("q") q: string) {
+        console.log(q);
+        return this.usersService.getSearchUsers(q);
     }
 
     /**
@@ -87,6 +94,8 @@ export class UsersController {
         // Query параметр передает строковые значения, а нам нужны числовые
         const user = await this.usersService.findUserById(+id);
         const { auth_user_id } = request.body; // Получаем id вошедшего пользователя
+
+        // TODO: Если пользователь уже в списке друзей, то выдать ошибку
 
         return this.usersService.addFriend(auth_user_id, user);
     }

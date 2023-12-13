@@ -27,9 +27,15 @@ export class AuthService {
 
     async registerUser(user: CreateUserDto) {
         const hashedPassword = await bcrypt.hash(user.password, 10);
+
         return this.prismaService.users.create({
             data: {
                 ...user,
+                // Если у пользователя name и lastname начинается со строчных букв, то переводим в верхний регистр первую букву
+                name: user.name.charAt(0).toUpperCase() + user.name.slice(1),
+                lastname:
+                    user.lastname.charAt(0).toUpperCase() +
+                    user.lastname.slice(1),
                 password: hashedPassword,
             },
         });

@@ -41,29 +41,18 @@ export class UsersController {
      */
     @Get("")
     async getAllUsers(@Query("id") id: string) {
-        const { friends } = await this.usersService.findUserById(+id);
-        const allUsers = await this.usersService.getAllUsers();
-
-        if (friends.length === 0) {
-            return allUsers;
-        }
-
-        // Удаляем из общего списка пользователей, которые уже есть в списке друзей.
-        return allUsers.filter((same) => {
-            // Some -- "проверяет, удовлетворяет ли какой-либо элемент массива условию, заданному в передаваемой функции".
-            // => Если true то данные не попадают в новый массив благодаря методу filter.
-            return !friends.some((friend: any) => same.id === friend.id);
-        });
+        return this.usersService.getAllUsers(+id);
     }
 
     /**
      * Поиск пользователя по имени или фамилии
      * @param q
+     * @param request
      */
-    @Get("search")
-    async getSearchUsers(@Query("q") q: string) {
-        console.log(q);
-        return this.usersService.getSearchUsers(q);
+    @Post("search")
+    async getSearchUsers(@Query("q") q: string, @Request() request: any) {
+        const { auth_user_id } = request.body;
+        return this.usersService.getSearchUsers(auth_user_id, q);
     }
 
     /**

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+    ForbiddenException,
+    Injectable,
+    NotFoundException,
+} from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { User } from "../models/UserTypes";
 
@@ -31,8 +35,10 @@ export class UsersService {
      * @param id
      * @param q
      */
+    //TODO: как то объединить похожие функции
     async getSearchUsers(id: number, q: string) {
         const { friends } = await this.findUserById(id);
+        // TODO: Можно сделать также как и в getSearchFriends.
         // TODO: Сделать чтобы поиск проходил по первой заглавной или строчной букве одинаково.
         const users = await this.prismaService.users.findMany({
             where: {
@@ -59,6 +65,27 @@ export class UsersService {
         return users.filter(
             (same) => !friends.some((friend: any) => same.id === friend.id),
         );
+    }
+
+    /**
+     * Страница find-friends
+     * Поиск пользователя по имени или фамилии
+     * @param id
+     * @param q
+     */
+    //TODO: как то объединить похожие функции
+    async getSearchFriends(id: number, q: string) {
+        const { friends } = await this.findUserById(id);
+
+        let findFriends = friends.filter(
+            (arr: any) => arr.name.includes(q) || arr.lastname.includes(q),
+        );
+
+        if (findFriends.length === 0) {
+            throw new ForbiddenException("Users not found");
+        }
+
+        return findFriends;
     }
 
     /**

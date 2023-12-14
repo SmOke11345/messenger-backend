@@ -1,5 +1,6 @@
 import {
     Controller,
+    Delete,
     Get,
     Inject,
     NotFoundException,
@@ -18,6 +19,8 @@ import { UsersService } from "./users.service";
 import { JwtAuthGuard } from "../auth/guard/auth.guard";
 
 import multer from "multer";
+import { JwtService } from "@nestjs/jwt";
+import { jwtConstants } from "../auth/utils/constants";
 
 /**
  * Создания хранилища файлов
@@ -34,7 +37,24 @@ const storage = multer.diskStorage({
 
 @Controller("users")
 export class UsersController {
-    constructor(@Inject("USER_SERVICE") private usersService: UsersService) {}
+    constructor(
+        @Inject("USER_SERVICE") private usersService: UsersService,
+        private jwtService: JwtService,
+    ) {}
+
+    /**
+     * Получение id пользователя из токена
+     * @param token
+     */
+    decodeToken(token: string) {
+        const extractedToken = token.split(" ")[1];
+
+        const verify = this.jwtService.verify(extractedToken, {
+            secret: jwtConstants.secret,
+        });
+
+        return verify.sub;
+    }
 
     /**
      * Получение данных всех пользователей
@@ -45,14 +65,31 @@ export class UsersController {
     }
 
     /**
+     * Страница find-friends
      * Поиск пользователя по имени или фамилии
      * @param q
      * @param request
      */
-    @Post("search")
+    @UseGuards(JwtAuthGuard)
+    @Get("find-friends")
     async getSearchUsers(@Query("q") q: string, @Request() request: any) {
-        const { auth_user_id } = request.body;
+        const auth_user_id = this.decodeToken(request.headers.authorization);
+
         return this.usersService.getSearchUsers(auth_user_id, q);
+    }
+
+    /**
+     * Страница friends
+     * Поиск пользователя по имени или фамилии
+     * @param q
+     * @param request
+     */
+    @UseGuards(JwtAuthGuard)
+    @Get("friends")
+    async getSearchFriends(@Query("q") q: string, @Request() request: any) {
+        const auth_user_id = this.decodeToken(request.headers.authorization);
+
+        return this.usersService.getSearchFriends(auth_user_id, q);
     }
 
     /**
@@ -82,7 +119,7 @@ export class UsersController {
         // TODO: Упростить, если это возможно, повторяющиеся строчки кода
         // Query параметр передает строковые значения, а нам нужны числовые
         const user = await this.usersService.findUserById(+id);
-        const { auth_user_id } = request.body; // Получаем id вошедшего пользователя
+        const auth_user_id = this.decodeToken(request.headers.authorization);
 
         // TODO: Если пользователь уже в списке друзей, то выдать ошибку
 
@@ -95,12 +132,12 @@ export class UsersController {
      * @param request
      */
     @UseGuards(JwtAuthGuard)
-    @Post("friends/delete/:id")
+    @Delete("friends/delete/:id")
     async deleteFriend(@Param("id") id: string, @Request() request: any) {
         // TODO: Упростить, если это возможно, повторяющиеся строчки кода
         // Query параметр передает строковые значения, а нам нужны числовые
         const user = await this.usersService.findUserById(+id);
-        const { auth_user_id } = request.body; // Получаем id вошедшего пользователя
+        const auth_user_id = this.decodeToken(request.headers.authorization);
 
         return this.usersService.deleteFriend(auth_user_id, user);
     }

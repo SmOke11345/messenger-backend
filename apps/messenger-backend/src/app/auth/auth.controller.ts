@@ -45,7 +45,7 @@ export class AuthController {
         @Request() request: any,
         @Session() session: Record<string, any>,
     ) {
-        const token = await this.authService.singIn(request);
+        const token = await this.authService.singIn(request.user);
 
         return {
             access_token: token,

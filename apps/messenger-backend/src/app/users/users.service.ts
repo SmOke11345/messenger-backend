@@ -4,14 +4,25 @@ import {
     NotFoundException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { User } from "../models/UserTypes";
 
 @Injectable()
 export class UsersService {
     constructor(private prismaService: PrismaService) {}
 
     /**
-     * Получение всех пользователей из базы данных
+     * Поиск пользователя по id
+     * @param id
+     */
+    async findUserById(id: number) {
+        return await this.prismaService.users.findFirst({
+            where: {
+                id,
+            },
+        });
+    }
+
+    /**
+     * Получение всех пользователей
      */
     async getAllUsers(id: number) {
         const { friends } = await this.findUserById(id);
@@ -32,13 +43,13 @@ export class UsersService {
     /**
      * Страница find-friends
      * Поиск пользователя по имени или фамилии
-     * @param id
+     * @param request
      * @param q
      */
-    //TODO: как то объединить похожие функции
-    async getSearchUsers(id: number, q: string) {
-        const { friends } = await this.findUserById(id);
-        // TODO: Можно сделать также как и в getSearchFriends.
+    async getSearchUsers(request: any, q: string) {
+        const { sub } = request.user;
+        const { friends } = await this.findUserById(sub);
+
         // TODO: Сделать чтобы поиск проходил по первой заглавной или строчной букве одинаково.
         const users = await this.prismaService.users.findMany({
             where: {
@@ -70,12 +81,12 @@ export class UsersService {
     /**
      * Страница find-friends
      * Поиск пользователя по имени или фамилии
-     * @param id
+     * @param request
      * @param q
      */
-    //TODO: как то объединить похожие функции
-    async getSearchFriends(id: number, q: string) {
-        const { friends } = await this.findUserById(id);
+    async getSearchFriends(request: any, q: string) {
+        const { sub } = request.user;
+        const { friends } = await this.findUserById(sub);
 
         let findFriends = friends.filter(
             (arr: any) => arr.name.includes(q) || arr.lastname.includes(q),
@@ -88,39 +99,45 @@ export class UsersService {
         return findFriends;
     }
 
-    /**
-     * Поиск пользователя по id
-     * @param id
-     */
-    async findUserById(id: number) {
-        return await this.prismaService.users.findFirst({
-            where: {
-                id,
-            },
-        });
+    // Получение друзей
+    async getFriends(id: number) {
+        // Параметры передаваемые в строку запроса являются строковым типом => нужно преобразовать в числовой
+        const { friends } = await this.findUserById(+id);
+
+        // Если массив с друзьями пуст выдаем ошибку
+        if (friends.length === 0) {
+            throw new NotFoundException("You haven't added any friends yet!");
+        }
+
+        return friends;
     }
 
     // TODO: НАБУДУЩЕЕ Сделать отправку заявки на добавление в друзья.
     //  Которая в свою очередь будет ссылаться на этот запрос
     /**
      * Добавление друзей
-     * @param authUser
-     * @param user
+     * @param request
+     * @param id
      */
-    async addFriend(authUser: number, user: User) {
-        const { friends } = await this.findUserById(authUser);
+    async addFriend(request: any, id: number) {
+        const { sub } = request.user;
+        // Получаем данные пользователя которого нужно добавить
+        const user = await this.findUserById(id);
+        // Получаем друзей пользователя
+        const { friends } = await this.findUserById(sub);
 
         const hiddenFriend = friends.find(
             (friend: any) => friend.id === user.id,
         );
 
+        // Если пользователь уже добавлен в друзья
         if (hiddenFriend) {
             throw new NotFoundException("You already added this user");
         }
 
         return await this.prismaService.users.update({
             where: {
-                id: authUser,
+                id: sub,
             },
             data: {
                 friends: {
@@ -132,23 +149,26 @@ export class UsersService {
 
     /**
      * Удаление друзей
-     * @param authUser
-     * @param user
+     * @param request
+     * @param _id
      */
-    async deleteFriend(authUser: number, user: User) {
+    async deleteFriend(request: any, _id: number) {
+        const { sub } = request.user;
+        // Получаем данные пользователя которого нужно удалить
+        const { id } = await this.findUserById(_id);
         // Получаем друзей пользователя
-        const { friends } = await this.findUserById(authUser);
+        const { friends } = await this.findUserById(sub);
 
         // Используется для обновления данных пользователя
         return await this.prismaService.users.update({
             where: {
-                id: authUser,
+                id: sub,
             },
             data: {
                 friends: {
                     // Из полученных данных берем массив с друзьями,
                     // затем фильтруем его и устанавливаем при помощи set
-                    set: friends.filter((friend) => friend["id"] !== user.id),
+                    set: friends.filter((friend) => friend["id"] !== id),
                 },
             },
         });

@@ -37,12 +37,7 @@ export class UsersController {
     constructor(@Inject("USER_SERVICE") private usersService: UsersService) {}
 
     /**
-     * Получение id пользователя из токена
-     * @param token
-     */
-
-    /**
-     * Получение данных всех пользователей
+     * Получение всех пользователей
      */
     @Get("")
     async getAllUsers(@Query("id") id: string) {
@@ -50,8 +45,8 @@ export class UsersController {
     }
 
     /**
-     * Страница find-friends
      * Поиск пользователя по имени или фамилии
+     * Страница find-friends
      * @param q
      * @param request
      */
@@ -62,8 +57,8 @@ export class UsersController {
     }
 
     /**
-     * Страница friends
      * Поиск пользователя по имени или фамилии
+     * Страница friends
      * @param q
      * @param request
      */
@@ -113,7 +108,7 @@ export class UsersController {
     async uploadedFile(@UploadedFile() file: Express.Multer.File) {}
 
     /**
-     * Запрос для получения изображения
+     * Получения изображения профиля
      * @param filename
      * @param res
      */

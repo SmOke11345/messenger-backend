@@ -23,6 +23,7 @@ export class UsersService {
 
     /**
      * Получение всех пользователей
+     * @param id
      */
     async getAllUsers(id: number) {
         const { friends } = await this.findUserById(id);
@@ -99,7 +100,10 @@ export class UsersService {
         return findFriends;
     }
 
-    // Получение друзей
+    /**
+     * Получение друзей
+     * @param id
+     */
     async getFriends(id: number) {
         // Параметры передаваемые в строку запроса являются строковым типом => нужно преобразовать в числовой
         const { friends } = await this.findUserById(+id);

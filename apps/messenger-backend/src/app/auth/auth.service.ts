@@ -56,8 +56,8 @@ export class AuthService {
     async validateUser(login: string, password: string) {
         const user = await this.getUserEmail(login);
 
-        // Если такого email не существует
-        if (user === null) {
+        // Если такого login не существует
+        if (user.login === null) {
             throw new UnauthorizedException("Login not found");
         }
 

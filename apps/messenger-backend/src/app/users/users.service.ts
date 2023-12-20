@@ -1,13 +1,21 @@
 import {
     ForbiddenException,
+    Inject,
     Injectable,
     NotFoundException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
+import { AuthService } from "../auth/auth.service";
+
+import * as bcrypt from "bcryptjs";
+
 @Injectable()
 export class UsersService {
-    constructor(private prismaService: PrismaService) {}
+    constructor(
+        @Inject("AUTH_SERVICE") private authService: AuthService,
+        private prismaService: PrismaService,
+    ) {}
 
     /**
      * Поиск пользователя по id
@@ -174,6 +182,31 @@ export class UsersService {
                     // затем фильтруем его и устанавливаем при помощи set
                     set: friends.filter((friend) => friend["id"] !== id),
                 },
+            },
+        });
+    }
+
+    async editProfile(request: any, id: number) {
+        const { password, login, ...data } = request.body;
+
+        // Хэшируем новый пароль
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Ищем подобный login, если он существует, выдаем ошибку
+        const findLogin = await this.authService.getUserEmail(login);
+        if (findLogin) {
+            console.log(findLogin);
+            throw new ForbiddenException(`Login ${login} already exists`);
+        }
+
+        return this.prismaService.users.update({
+            where: {
+                id: id,
+            },
+            data: {
+                ...data,
+                login,
+                password: hashedPassword,
             },
         });
     }

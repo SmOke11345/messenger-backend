@@ -4,6 +4,7 @@ import {
     Get,
     Inject,
     Param,
+    Patch,
     Post,
     Query,
     Request,
@@ -117,5 +118,11 @@ export class UsersController {
         return res.sendFile(filename, {
             root: "./apps/messenger-backend/src/assets/profile_img",
         });
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch("profile/:id")
+    async editProfile(@Param("id") id: string, @Request() request: any) {
+        return this.usersService.editProfile(request, +id);
     }
 }

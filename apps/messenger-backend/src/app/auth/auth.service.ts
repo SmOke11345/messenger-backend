@@ -57,7 +57,7 @@ export class AuthService {
         const user = await this.getUserEmail(login);
 
         // Если такого login не существует
-        if (user.login === null) {
+        if (user === null) {
             throw new UnauthorizedException("Login not found");
         }
 

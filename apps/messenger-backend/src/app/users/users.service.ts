@@ -186,17 +186,31 @@ export class UsersService {
         });
     }
 
+    /**
+     * Изменение данных пользователя
+     * @param request
+     * @param id
+     */
     async editProfile(request: any, id: number) {
-        const { password, login, ...data } = request.body;
+        const { ...data } = request.body;
 
-        // Хэшируем новый пароль
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Если полученный объект включает пароль.
+        if (data.password) {
+            // Хэшируем новый пароль и перезаписываем его обратно в data. Это просто ах*****
+            data.password = await bcrypt.hash(data.password, 10);
+        }
 
-        // Ищем подобный login, если он существует, выдаем ошибку
-        const findLogin = await this.authService.getUserEmail(login);
-        if (findLogin) {
-            console.log(findLogin);
-            throw new ForbiddenException(`Login ${login} already exists`);
+        // Eсли полученные объект включает login.
+        if (data.login) {
+            // Ищем подобный login
+            const findLogin = await this.authService.getUserEmail(data.login);
+            // Если такой login существует, выдаем ошибку
+            if (findLogin) {
+                console.log(findLogin);
+                throw new ForbiddenException(
+                    `Login ${data.login} already exists`,
+                );
+            }
         }
 
         return this.prismaService.users.update({
@@ -205,8 +219,6 @@ export class UsersService {
             },
             data: {
                 ...data,
-                login,
-                password: hashedPassword,
             },
         });
     }

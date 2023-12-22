@@ -120,9 +120,15 @@ export class UsersController {
         });
     }
 
+    /**
+     * Изменение данных пользователя
+     * @param id
+     * @param request
+     */
     @UseGuards(JwtAuthGuard)
     @Patch("profile/:id")
     async editProfile(@Param("id") id: string, @Request() request: any) {
+        // TODO: Нужно отправлять только те значения, которые были получены из запроса, при этом учитывать что у других значений есть свой функционал для изменения.
         return this.usersService.editProfile(request, +id);
     }
 }

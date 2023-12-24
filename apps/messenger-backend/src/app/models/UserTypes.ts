@@ -5,5 +5,12 @@ export interface User {
     lastname?: string;
     password: string;
     profile_img?: string;
-    friends: Object[];
+    friends?: Friends[];
+}
+
+export interface Friends {
+    id: number;
+    friend: User;
+    friendId: number;
+    userId: number;
 }

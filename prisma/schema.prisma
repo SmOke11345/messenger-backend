@@ -8,11 +8,21 @@ datasource db {
 }
 
 model Users {
-  id          Int     @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String
   lastname    String?
+  login       String
   password    String
   profile_img String?
-  login       String
-  friends     Json[]
+  // Можно использовать при помощи include при поиске данных.
+  friends     Friends[] @relation("friendsUsers") // пользователь является другом для других пользователей. (Пользователи которые добавили в друзья)
+  friendsOf   Friends[] @relation("UserFriends") // данные где пользователь является инициатором дружбы. (Пользователи которых добавил сам пользователь)
+}
+
+model Friends {
+  id       Int   @id @default(autoincrement())
+  userId   Int // Тот пользователь который добавил.
+  friendId Int // id добавленного пользователя.
+  user     Users @relation(fields: [userId], references: [id], "UserFriends")
+  friend   Users @relation(fields: [friendId], references: [id], "friendsUsers")
 }

@@ -1,7 +1,6 @@
 import {
     Body,
     Controller,
-    ForbiddenException,
     Get,
     Inject,
     Post,
@@ -21,21 +20,11 @@ export class AuthController {
 
     @Post("register")
     async register(@Body() user: CreateUserDto) {
-        // Ищем email введенный пользователем в базе данных
-        const _user = await this.authService.getUserEmail(user.login);
-        // Если email уже существует, выбрасываем ошибку
-        if (_user) {
-            throw new ForbiddenException(`Login ${_user.login} already exists`);
-        }
-
-        // Если такого email не существует, создаем нового
-        return this.authService.registerUser({
-            ...user,
-        });
+        return this.authService.register({ ...user });
     }
 
     /**
-     * Аутентификация пользователя
+     * Аутентификация пользователя.
      * @param request
      * @param session
      */
@@ -54,7 +43,7 @@ export class AuthController {
     }
 
     /**
-     * Защищаем маршрут, и смотрим данные пользователя из token`a
+     * Защищаем маршрут, и смотрим данные пользователя из token`a.
      * @param request
      * @param session
      */
@@ -64,16 +53,12 @@ export class AuthController {
         @Request() request: any,
         @Session() session: Record<string, any>,
     ) {
-        session.authenticated = true; // Изменения происходят сразу, как только мы изменим объект сессии
+        session.authenticated = true; // Изменения происходят сразу, как только мы изменим объект сессии.
 
-        // Получаем токен который мы сохранили в auth.guard.ts
+        // Получаем токен который мы сохранили в auth.guard.ts.
         return {
             user: request.user,
             cookie: session,
         };
     }
-
-    //
-    // @Get("cookie")
-    // async getCookie() {}
 }

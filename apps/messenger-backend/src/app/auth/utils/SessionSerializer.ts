@@ -12,9 +12,9 @@ export class SessionSerializer extends PassportSerializer {
     }
 
     /**
-     * Преобразует (сериализирует) данные, используется для преобразования полученных данных в формат JSON
+     * Преобразует (сериализирует) данные, используется для преобразования полученных данных в формат JSON.
      *
-     * Происходит в момент аутентификации пользователя, или после первого входа в систему
+     * Происходит в момент аутентификации пользователя, или после первого входа в систему.
      * @param user
      * @param done
      */
@@ -34,8 +34,8 @@ export class SessionSerializer extends PassportSerializer {
      */
     async deserializeUser(user: User, done: (error: any, user: User) => void) {
         console.log("DeserializeUser");
-        const user_DB = await this.userService.findUserById(user.id);
-        // Если пользователь был найден, то возвращаем его сериализованные данные, иначе возвращаем null
+        const user_DB: User = await this.userService.findUserById(user.id);
+        // Если пользователь был найден, то возвращаем его сериализованные данные, иначе возвращаем null.
         return user_DB ? done(null, user_DB) : done(null, null);
     }
 }

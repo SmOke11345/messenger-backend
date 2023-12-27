@@ -46,8 +46,8 @@ export class UsersController {
     }
 
     /**
-     * Поиск пользователя по имени или фамилии
-     * Страница find-friends
+     * Поиск пользователя по имени или фамилии.
+     * Страница find-friends.
      * @param q
      * @param request
      */
@@ -58,8 +58,8 @@ export class UsersController {
     }
 
     /**
-     * Поиск пользователя по имени или фамилии
-     * Страница friends
+     * Поиск пользователя по имени или фамилии.
+     * Страница friends.
      * @param q
      * @param request
      */
@@ -79,7 +79,7 @@ export class UsersController {
     }
 
     /**
-     * Добавление друзей
+     * Добавление друзей.
      * @param id
      * @param request
      */
@@ -90,7 +90,7 @@ export class UsersController {
     }
 
     /**
-     * Удаление друзей
+     * Удаление друзей.
      * @param id
      * @param request
      */
@@ -101,7 +101,7 @@ export class UsersController {
     }
 
     /**
-     * Запрос для загрузки изображений
+     * Запрос для загрузки изображений.
      * @param file
      */
     @Post("upload")
@@ -109,7 +109,7 @@ export class UsersController {
     async uploadedFile(@UploadedFile() file: Express.Multer.File) {}
 
     /**
-     * Получения изображения профиля
+     * Получения изображения профиля.
      * @param filename
      * @param res
      */
@@ -121,7 +121,7 @@ export class UsersController {
     }
 
     /**
-     * Изменение данных пользователя
+     * Изменение данных пользователя.
      * @param id
      * @param request
      */

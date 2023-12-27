@@ -7,6 +7,7 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 
 import { AuthService } from "../auth/auth.service";
+import { User } from "../models/UserTypes";
 
 import * as bcrypt from "bcryptjs";
 
@@ -18,7 +19,7 @@ export class UsersService {
     ) {}
 
     /**
-     * Поиск пользователя по id
+     * Поиск пользователя по id.
      * @param id
      */
     async findUserById(id: number) {
@@ -30,41 +31,43 @@ export class UsersService {
     }
 
     /**
-     * Получение всех пользователей
+     * Получение всех пользователей.
      * @param id
      */
     async getAllUsers(id: number) {
-        // Получение всех пользователей
-        const allUsers = await this.prismaService.users.findMany();
+        // Получение всех пользователей.
+        const allUsers: User[] = await this.prismaService.users.findMany();
         // Получение друзей пользователя.
-        const friends = await this.getFriends(id);
+        const friends: User[] = await this.getFriends(id);
 
         if (friends.length === 0) {
             return allUsers;
         }
 
         // Удаляем из общего списка пользователей, которые уже есть в списке друзей.
-        return allUsers.filter((same) => {
+        return allUsers.filter((same: User) => {
             // Some -- "проверяет, удовлетворяет ли какой-либо элемент массива условию, заданному в передаваемой функции".
             // => Если true то данные не попадают в новый массив благодаря методу filter.
-            return !friends.some((friend: any) => same.id === friend.id);
+            return !friends.some(
+                (friend: User) => same.id === friend.id || same.id === id,
+            );
         });
     }
 
     /**
-     * Страница find-friends
-     * Поиск пользователя по имени или фамилии
+     * Страница find-friends.
+     * Поиск пользователя по имени или фамилии.
      * @param request
      * @param q
      */
     async getSearchUsers(request: any, q: string) {
         const { sub } = request.user; // Получение id пользователя (аутентифицированного).
 
-        // Получаем список всех пользователей
-        const usersAll = await this.prismaService.users.findMany();
+        // Получаем список всех пользователей.
+        const usersAll: User[] = await this.prismaService.users.findMany();
 
         // Получение друзей пользователя.
-        const friends = await this.getFriends(sub);
+        const friends: User[] = await this.getFriends(sub);
 
         // Фильтруем массив друзей, для поиска пользователей по схожему имени или фамилии.
         const users = usersAll.filter(
@@ -77,13 +80,13 @@ export class UsersService {
 
         // Возвращает список найденных пользователей, без уже добавленных друзей.
         return users.filter(
-            (same) => !friends.some((friend: any) => same.id === friend.id),
+            (same) => !friends.some((friend: User) => same.id === friend.id),
         );
     }
 
     /**
-     * Страница friends
-     * Поиск пользователя по имени или фамилии
+     * Страница friends.
+     * Поиск пользователя по имени или фамилии.
      * @param request
      * @param q
      */
@@ -91,7 +94,7 @@ export class UsersService {
         const { sub } = request.user; // Получение id пользователя (аутентифицированного).
 
         // Получение друзей пользователя.
-        const friends = await this.getFriends(sub);
+        const friends: User[] = await this.getFriends(sub);
 
         // Фильтруем массив друзей, для поиска пользователей по схожему имени или фамилии.
         const findFriends = friends.filter(
@@ -106,7 +109,7 @@ export class UsersService {
     }
 
     /**
-     * Получение друзей
+     * Получение друзей.
      * @param id
      */
     async getFriends(id: number) {
@@ -128,7 +131,7 @@ export class UsersService {
             },
         });
 
-        // Если массив с друзьями пуст выдаем ошибку
+        // Если массив с друзьями пуст выдаем ошибку.
         if (!user.friendsOf && !user.friends) {
             throw new NotFoundException("You haven't added any friends yet!");
         }
@@ -141,22 +144,22 @@ export class UsersService {
 
     // TODO: НАБУДУЩЕЕ Сделать отправку заявки на добавление в друзья.
     /**
-     * Добавление друзей
+     * Добавление друзей.
      * @param request
      * @param id
      */
     async addFriend(request: any, id: number) {
         const { sub } = request.user; // Получение id пользователя (аутентифицированного).
 
-        // Получаем данные пользователя
-        const user = await this.findUserById(sub);
+        // Получаем данные пользователя.
+        const user: User = await this.findUserById(sub);
 
-        // Если пользователь не найден
+        // Если пользователь не найден.
         if (!user) {
             throw new NotFoundException("User not found");
         }
 
-        // Если пользователь уже добавлен в друзья
+        // Если пользователь уже добавлен в друзья.
         const friends_user = await this.prismaService.friends.findFirst({
             where: {
                 OR: [
@@ -189,7 +192,7 @@ export class UsersService {
     }
 
     /**
-     * Удаление друзей
+     * Удаление друзей.
      * @param request
      * @param _id
      */
@@ -217,7 +220,7 @@ export class UsersService {
     }
 
     /**
-     * Изменение данных пользователя
+     * Изменение данных пользователя.
      * @param request
      * @param id
      */
@@ -232,11 +235,10 @@ export class UsersService {
 
         // Eсли полученные объект включает login.
         if (data.login) {
-            // Ищем подобный login
+            // Ищем подобный login.
             const findLogin = await this.authService.getUserEmail(data.login);
-            // Если такой login существует, выдаем ошибку
+            // Если такой login существует, выдаем ошибку.
             if (findLogin) {
-                console.log(findLogin);
                 throw new ForbiddenException(
                     `Login ${data.login} already exists`,
                 );

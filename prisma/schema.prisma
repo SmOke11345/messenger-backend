@@ -26,3 +26,8 @@ model Friends {
   user     Users @relation(fields: [userId], references: [id], "UserFriends")
   friend   Users @relation(fields: [friendId], references: [id], "friendUsers")
 }
+
+// TODO: Добавить таблицы для хранения сообщений пользователей, Таблицы должны включать в себя id пользователей и их сообщения с временем отправки.
+model Messages {
+  id Int @id @default(autoincrement())
+}

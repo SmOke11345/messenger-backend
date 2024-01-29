@@ -8,15 +8,17 @@ datasource db {
 }
 
 model Users {
-  id          Int       @id @default(autoincrement())
+  id          Int               @id @default(autoincrement())
   name        String
   lastname    String?
   login       String
   password    String
   profile_img String?
   // Можно использовать при помощи include при поиске данных.
-  friends     Friends[] @relation("friendUsers") // пользователь является другом для других пользователей. (Пользователи которые добавили в друзья)
-  friendsOf   Friends[] @relation("UserFriends") // данные где пользователь является инициатором дружбы. (Пользователи которых добавил сам пользователь)
+  friends     Friends[]         @relation("friendUsers") // пользователь является другом для других пользователей. (Пользователи которые добавили в друзья)
+  friendsOf   Friends[]         @relation("UserFriends") // данные где пользователь является инициатором дружбы. (Пользователи которых добавил сам пользователь)
+  messages    Messages[]        @relation("UserMessages")
+  memberships ChatMemberships[]
 }
 
 model Friends {
@@ -27,7 +29,28 @@ model Friends {
   friend   Users @relation(fields: [friendId], references: [id], "friendUsers")
 }
 
-// TODO: Добавить таблицы для хранения сообщений пользователей, Таблицы должны включать в себя id пользователей и их сообщения с временем отправки.
 model Messages {
-  id Int @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
+  content   String
+  senderId  Int
+  chatId    Int
+  sender    Users    @relation("UserMessages", fields: [senderId], references: [id])
+  chat      Chats    @relation("ChatMessages", fields: [chatId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Chats {
+  id       Int               @id @default(autoincrement())
+  messages Messages[]        @relation("ChatMessages")
+  members  ChatMemberships[] // Участники чата
+}
+
+model ChatMemberships {
+  userId Int
+  chatId Int
+  user   Users @relation(fields: [userId], references: [id])
+  chat   Chats @relation(fields: [chatId], references: [id])
+
+  @@id([userId, chatId]) // Указание нескольких первичных ключей
 }

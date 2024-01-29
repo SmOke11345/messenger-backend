@@ -48,7 +48,7 @@ export class AuthController {
      * @param session
      */
     @UseGuards(JwtAuthGuard)
-    @Get("chats")
+    @Get("messages")
     async getDataUser(
         @Request() request: any,
         @Session() session: Record<string, any>,

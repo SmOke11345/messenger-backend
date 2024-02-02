@@ -24,6 +24,7 @@ export class Gateways implements OnModuleInit {
         this.server.on("connection", (socket) => {
             console.log(socket.id);
             console.log("Connected");
+            console.log(socket.rooms);
         });
     }
 

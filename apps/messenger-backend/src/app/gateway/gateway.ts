@@ -58,13 +58,9 @@ export class Gateways
     /**
      * Отправка сообщений.
      * @param payload
-     * @param client
      */
     @SubscribeMessage("newMessage")
-    onNewMessage(
-        @MessageBody() payload: { content: string; chatId: string },
-        @ConnectedSocket() client: Socket,
-    ) {
+    onNewMessage(@MessageBody() payload: { content: string; chatId: string }) {
         console.log(payload.content, payload.chatId);
         // Если пользователи находятся в одном чате (комнате), то прослушиваем onMessage и получаем отправленное сообщение.
         this.server.to(payload.chatId).emit("onMessage", payload.content);
@@ -123,6 +119,4 @@ export class Gateways
                 `Пользователь ${client.id} покинул комнату ${chatId}`,
             );
     }
-
-    //  TODO: Добавить выход из чата (комнаты).
 }

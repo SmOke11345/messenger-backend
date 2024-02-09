@@ -1,22 +1,38 @@
-import { Controller, Param, Post, Request, UseGuards } from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Get,
+    Param,
+    Post,
+    Request,
+    UseGuards,
+} from "@nestjs/common";
 import { ChatsService } from "./chats.service";
 import { JwtAuthGuard } from "../auth/guard/auth.guard";
 
 @Controller("chats")
 export class ChatsController {
+    F;
+
     constructor(private chatsService: ChatsService) {}
 
-    // @Post(":id")
-    // async sendMessage(
-    //     @Body() body: { content: string; chatId: string; senderId: string },
-    // ) {
-    //     return this.chatsService.sendMessage(body);
-    // }
-    //
-    // @Get(":id")
-    // async getMessages(@Body() body: { chatId: string }) {
-    //     return this.chatsService.getMessages(+body.chatId);
-    // }
+    @UseGuards(JwtAuthGuard)
+    @Post("send-message")
+    async sendMessage(
+        @Body() body: { content: string; chatId: string },
+        @Request() request: any,
+    ) {
+        return this.chatsService.sendMessage(request, body);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get("get-messages")
+    async getMessages(
+        @Body() body: { chatId: string },
+        @Request() request: any,
+    ) {
+        return this.chatsService.getMessages(request, +body.chatId);
+    }
 
     /**
      * Создание-получение чата.

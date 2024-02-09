@@ -1,34 +1,60 @@
-import { Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class ChatsService {
     constructor(private prisma: PrismaService) {}
 
-    // async sendMessage(body: {
-    //     content: string;
-    //     chatId: string;
-    //     senderId: string;
-    // }) {
-    //     return await this.prisma.messages.create({
-    //         data: {
-    //             content: body.content,
-    //             chatId: +body.chatId,
-    //             senderId: +body.senderId,
-    //         },
-    //     });
-    // }
-    //
-    // async getMessages(chatId: number) {
-    //     return this.prisma.chats.findUnique({
-    //         where: {
-    //             id: chatId,
-    //         },
-    //         include: {
-    //             messages: true,
-    //         },
-    //     });
-    // }
+    /**
+     * Отправка сообщений в базу данных.
+     * @param request
+     * @param body
+     */
+    async sendMessage(
+        request: any,
+        body: {
+            content: string;
+            chatId: string;
+        },
+    ) {
+        const { sub } = request.user; // Получение id пользователя (аутентифицированного).
+
+        await this.findMembership(sub, +body.chatId); // Проверка является ли пользователь членом чата.
+
+        // TODO: Убирать пробелы во frontend после отправки сообщения.
+        // Проверка на пустое сообщение.
+        if (body.content === "") {
+            throw new ForbiddenException("Message is empty");
+        }
+
+        return await this.prisma.messages.create({
+            data: {
+                content: body.content,
+                chatId: +body.chatId,
+                senderId: sub,
+            },
+        });
+    }
+
+    /**
+     * Получение сообщений.
+     * @param request
+     * @param chatId
+     */
+    async getMessages(request: any, chatId: number) {
+        const { sub } = request.user; // Получение id пользователя (аутентифицированного).
+
+        await this.findMembership(sub, chatId); // Проверка является ли пользователь членом чата.
+
+        return this.prisma.chats.findUnique({
+            where: {
+                id: chatId,
+            },
+            include: {
+                messages: true,
+            },
+        });
+    }
 
     /**
      * Создание или получение чата.
@@ -43,7 +69,7 @@ export class ChatsService {
                 userId: sub,
                 chat: {
                     members: {
-                        // Получаем все записи в которых одна или несколько связанных записей соответствуют условию.
+                        // Получаем все записи в которых одна или несколько связанных записей соответствуют условию. Поиск по связям таблицы.
                         some: {
                             userId: +friendId,
                         },
@@ -74,5 +100,34 @@ export class ChatsService {
         });
 
         return newChat;
+    }
+
+    /**
+     * Поиск пользователя в чате.
+     * @param userId
+     * @param chatId
+     */
+    async findMembership(userId: number, chatId: number) {
+        // Ищем пользователя в чате.
+        const membersChat = await this.prisma.chats.findFirst({
+            where: {
+                id: chatId,
+                members: {
+                    // Получаем все записи в которых одна или несколько связанных записей соответствуют условию. Поиск по связям таблицы.
+                    some: {
+                        userId: userId,
+                    },
+                },
+            },
+            include: {
+                members: true,
+            },
+        });
+
+        if (!membersChat) {
+            throw new ForbiddenException("You are not a member of this chat");
+        }
+
+        return true;
     }
 }

@@ -12,26 +12,34 @@ import { JwtAuthGuard } from "../auth/guard/auth.guard";
 
 @Controller("chats")
 export class ChatsController {
-    F;
-
     constructor(private chatsService: ChatsService) {}
 
+    /**
+     * Отправка сообщений в Б.Д.
+     * @param body
+     * @param request
+     */
     @UseGuards(JwtAuthGuard)
     @Post("send-message")
     async sendMessage(
-        @Body() body: { content: string; chatId: string },
         @Request() request: any,
+        @Body() body: { content: string; chatId: string },
     ) {
         return this.chatsService.sendMessage(request, body);
     }
 
+    /**
+     * Получение сообщений из Б.Д.
+     * @param request
+     * @param chatId
+     */
     @UseGuards(JwtAuthGuard)
-    @Get("get-messages")
+    @Get("get-messages/:chatId")
     async getMessages(
-        @Body() body: { chatId: string },
         @Request() request: any,
+        @Param("chatId") chatId: string,
     ) {
-        return this.chatsService.getMessages(request, +body.chatId);
+        return this.chatsService.getMessages(request, +chatId);
     }
 
     /**
@@ -40,10 +48,10 @@ export class ChatsController {
      * @param request
      */
     @UseGuards(JwtAuthGuard)
-    @Post("create-or-get-chat/:friendId")
+    @Get("create-or-get-chat/:friendId")
     async createOrGetChat(
-        @Param("friendId") friendId: string,
         @Request() request: any,
+        @Param("friendId") friendId: string,
     ) {
         return this.chatsService.createOrGetChat(request, +friendId);
     }

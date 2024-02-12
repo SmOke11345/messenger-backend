@@ -6,7 +6,7 @@ export class ChatsService {
     constructor(private prisma: PrismaService) {}
 
     /**
-     * Отправка сообщений в базу данных.
+     * Отправка сообщений в Б.Д.
      * @param request
      * @param body
      */
@@ -37,7 +37,7 @@ export class ChatsService {
     }
 
     /**
-     * Получение сообщений.
+     * Получение сообщений из Б.Д.
      * @param request
      * @param chatId
      */
@@ -46,18 +46,28 @@ export class ChatsService {
 
         await this.findMembership(sub, chatId); // Проверка является ли пользователь членом чата.
 
-        return this.prisma.chats.findUnique({
+        const chats = await this.prisma.chats.findUnique({
             where: {
                 id: chatId,
             },
             include: {
-                messages: true,
+                messages: {
+                    // TODO: Выбрать все кроме...
+                    select: {
+                        content: true,
+                        senderId: true,
+                        updatedAt: true,
+                        createdAt: true,
+                    },
+                },
             },
         });
+
+        return chats.messages;
     }
 
     /**
-     * Создание или получение чата.
+     * Создание-получение чата.
      * @param request
      * @param friendId
      */
@@ -71,7 +81,7 @@ export class ChatsService {
                     members: {
                         // Получаем все записи в которых одна или несколько связанных записей соответствуют условию. Поиск по связям таблицы.
                         some: {
-                            userId: +friendId,
+                            userId: friendId,
                         },
                     },
                 },
@@ -95,7 +105,7 @@ export class ChatsService {
         await this.prisma.chatMemberships.createMany({
             data: [
                 { userId: sub, chatId: newChat.id },
-                { userId: +friendId, chatId: newChat.id },
+                { userId: friendId, chatId: newChat.id },
             ],
         });
 

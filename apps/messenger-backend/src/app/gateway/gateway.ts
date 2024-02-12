@@ -61,9 +61,13 @@ export class Gateways
      */
     @SubscribeMessage("newMessage")
     onNewMessage(@MessageBody() payload: { content: string; chatId: string }) {
-        console.log(payload.content, payload.chatId);
         // Если пользователи находятся в одном чате (комнате), то прослушиваем onMessage и получаем отправленное сообщение.
-        this.server.to(payload.chatId).emit("onMessage", payload.content);
+        this.server.to(payload.chatId).emit("onMessage", {
+            content: payload.content,
+            // senderId: ,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
     }
 
     // TODO: Добавить удаление сообщений.

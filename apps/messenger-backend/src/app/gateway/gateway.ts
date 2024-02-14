@@ -60,11 +60,18 @@ export class Gateways
      * @param payload
      */
     @SubscribeMessage("newMessage")
-    onNewMessage(@MessageBody() payload: { content: string; chatId: string }) {
+    onNewMessage(
+        @MessageBody()
+        payload: {
+            content: string;
+            chatId: string;
+            senderId: string;
+        },
+    ) {
         // Если пользователи находятся в одном чате (комнате), то прослушиваем onMessage и получаем отправленное сообщение.
         this.server.to(payload.chatId).emit("onMessage", {
             content: payload.content,
-            // senderId: ,
+            senderId: +payload.senderId,
             createdAt: new Date(),
             updatedAt: new Date(),
         });

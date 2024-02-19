@@ -43,6 +43,15 @@ export class ChatsController {
     }
 
     /**
+     * Получение списка всех чатов.
+     */
+    @UseGuards(JwtAuthGuard)
+    @Get("get-all-chats")
+    async getAllChats(@Request() request: any) {
+        return this.chatsService.getAllChats(request);
+    }
+
+    /**
      * Создание-получение чата.
      * @param friendId
      * @param request

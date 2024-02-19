@@ -8,29 +8,29 @@ export class ChatsService {
     /**
      * Отправка сообщений в Б.Д.
      * @param request
-     * @param body
+     * @param payload
      */
     async sendMessage(
         request: any,
-        body: {
+        payload: {
             content: string;
             chatId: string;
         },
     ) {
         const { sub } = request.user; // Получение id пользователя (аутентифицированного).
 
-        await this.findMembership(sub, +body.chatId); // Проверка является ли пользователь членом чата.
+        await this.findMembership(sub, +payload.chatId); // Проверка является ли пользователь членом чата.
+        console.log(payload.content);
 
-        // TODO: Убирать пробелы во frontend после отправки сообщения.
         // Проверка на пустое сообщение.
-        if (body.content === "") {
+        if (payload.content === "") {
             throw new ForbiddenException("Message is empty");
         }
 
         return await this.prisma.messages.create({
             data: {
-                content: body.content,
-                chatId: +body.chatId,
+                content: payload.content,
+                chatId: +payload.chatId,
                 senderId: sub,
             },
         });
@@ -52,7 +52,6 @@ export class ChatsService {
             },
             include: {
                 messages: {
-                    // TODO: Выбрать все кроме...
                     select: {
                         content: true,
                         senderId: true,
@@ -64,6 +63,53 @@ export class ChatsService {
         });
 
         return chats.messages;
+    }
+
+    /**
+     * Получение списка всех чатов.
+     */
+    // TODO: Нужно получить дату последнего сообщения, само сообщение, имя пользователя, фамилия, аватар.
+    async getAllChats(request: any) {
+        const { sub } = request.user; // Получение id пользователя (аутентифицированного).
+
+        const allChatsUser = await this.prisma.chats.findMany({
+            where: {
+                members: {
+                    some: {
+                        userId: sub,
+                    },
+                },
+            },
+            include: {
+                members: {
+                    select: {
+                        userId: true,
+                        user: {
+                            select: {
+                                name: true,
+                                lastname: true,
+                                profile_img: true,
+                            },
+                        },
+                    },
+                },
+                messages: {
+                    select: {
+                        senderId: true,
+                        createdAt: true,
+                        content: true,
+                    },
+                },
+            },
+        });
+
+        return allChatsUser.map((chat) => {
+            return {
+                // Получаем членов чата без самого пользователя.
+                members: chat.members.filter((user) => user.userId !== sub),
+                lastMessage: chat.messages.slice(-1), // Получаем последнее отправленное сообщение в чат.
+            };
+        });
     }
 
     /**

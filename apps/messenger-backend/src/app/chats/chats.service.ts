@@ -1,5 +1,12 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import {
+    ChatsType,
+    FindMembershipType,
+    GetMessagesType,
+    IChatMemberships,
+    UserType,
+} from "./chatsTypes";
 
 @Injectable()
 export class ChatsService {
@@ -20,7 +27,6 @@ export class ChatsService {
         const { sub } = request.user; // Получение id пользователя (аутентифицированного).
 
         await this.findMembership(sub, +payload.chatId); // Проверка является ли пользователь членом чата.
-        console.log(payload.content);
 
         // Проверка на пустое сообщение.
         if (payload.content === "") {
@@ -46,7 +52,7 @@ export class ChatsService {
 
         await this.findMembership(sub, chatId); // Проверка является ли пользователь членом чата.
 
-        const chats = await this.prisma.chats.findUnique({
+        const chats: GetMessagesType = await this.prisma.chats.findUnique({
             where: {
                 id: chatId,
             },
@@ -55,8 +61,8 @@ export class ChatsService {
                     select: {
                         content: true,
                         senderId: true,
-                        updatedAt: true,
                         createdAt: true,
+                        updatedAt: true,
                     },
                 },
             },
@@ -68,11 +74,10 @@ export class ChatsService {
     /**
      * Получение списка всех чатов.
      */
-    // TODO: Нужно получить дату последнего сообщения, само сообщение, имя пользователя, фамилия, аватар.
     async getAllChats(request: any) {
         const { sub } = request.user; // Получение id пользователя (аутентифицированного).
 
-        const allChatsUser = await this.prisma.chats.findMany({
+        const allChatsUser: ChatsType[] = await this.prisma.chats.findMany({
             where: {
                 members: {
                     some: {
@@ -83,9 +88,9 @@ export class ChatsService {
             include: {
                 members: {
                     select: {
-                        userId: true,
                         user: {
                             select: {
+                                id: true,
                                 name: true,
                                 lastname: true,
                                 profile_img: true,
@@ -103,11 +108,19 @@ export class ChatsService {
             },
         });
 
-        return allChatsUser.map((chat) => {
+        // TODO: Сделать чтобы socket не подключал сразу всех пользователей,
+        //  потому что, из-за большого количества запросов сервер не может обрабатывать запросы сразу, а лишь только после перезагрузки страницы. Может это frontend виноват...посмотрим.
+
+        // TODO: Если чат с пользователем существует, но в нем нет сообщений.
+        if (allChatsUser.length === 0) {
+        }
+
+        return allChatsUser.map((chat: ChatsType) => {
             return {
-                // Получаем членов чата без самого пользователя.
-                members: chat.members.filter((user) => user.userId !== sub),
-                lastMessage: chat.messages.slice(-1), // Получаем последнее отправленное сообщение в чат.
+                ...chat.members.find(
+                    (member: UserType) => member.user.id !== sub,
+                ),
+                lastMessage: chat.messages.at(-1),
             };
         });
     }
@@ -120,22 +133,23 @@ export class ChatsService {
     async createOrGetChat(request: any, friendId: number) {
         const { sub } = request.user; // Получение id пользователя (аутентифицированного).
 
-        const chat = await this.prisma.chatMemberships.findMany({
-            where: {
-                userId: sub,
-                chat: {
-                    members: {
-                        // Получаем все записи в которых одна или несколько связанных записей соответствуют условию. Поиск по связям таблицы.
-                        some: {
-                            userId: friendId,
+        const chat: IChatMemberships[] =
+            await this.prisma.chatMemberships.findMany({
+                where: {
+                    userId: sub,
+                    chat: {
+                        members: {
+                            // Получаем все записи в которых одна или несколько связанных записей соответствуют условию. Поиск по связям таблицы.
+                            some: {
+                                userId: friendId,
+                            },
                         },
                     },
                 },
-            },
-            include: {
-                chat: true,
-            },
-        });
+                include: {
+                    chat: true,
+                },
+            });
 
         // Если чат существует возвращаем его.
         if (chat.length !== 0) {
@@ -165,20 +179,21 @@ export class ChatsService {
      */
     async findMembership(userId: number, chatId: number) {
         // Ищем пользователя в чате.
-        const membersChat = await this.prisma.chats.findFirst({
-            where: {
-                id: chatId,
-                members: {
-                    // Получаем все записи в которых одна или несколько связанных записей соответствуют условию. Поиск по связям таблицы.
-                    some: {
-                        userId: userId,
+        const membersChat: FindMembershipType =
+            await this.prisma.chats.findFirst({
+                where: {
+                    id: chatId,
+                    members: {
+                        // Получаем все записи в которых одна или несколько связанных записей соответствуют условию. Поиск по связям таблицы.
+                        some: {
+                            userId: userId,
+                        },
                     },
                 },
-            },
-            include: {
-                members: true,
-            },
-        });
+                include: {
+                    members: true,
+                },
+            });
 
         if (!membersChat) {
             throw new ForbiddenException("You are not a member of this chat");

@@ -97,7 +97,7 @@ export class UsersService {
         const friends: User[] = await this.getFriends(sub);
 
         // Фильтруем массив друзей, для поиска пользователей по схожему имени или фамилии.
-        const findFriends = friends.filter(
+        const findFriends: User[] = friends.filter(
             (arr: any) => arr.name.includes(q) || arr.lastname.includes(q),
         );
 

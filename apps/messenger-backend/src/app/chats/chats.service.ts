@@ -3,7 +3,6 @@ import { PrismaService } from "../prisma/prisma.service";
 import {
     ChatsType,
     FindMembershipType,
-    GetMessagesType,
     IChatMemberships,
     UserType,
 } from "./chatsTypes";
@@ -52,11 +51,23 @@ export class ChatsService {
 
         await this.findMembership(sub, chatId); // Проверка является ли пользователь членом чата.
 
-        const chats: GetMessagesType = await this.prisma.chats.findUnique({
+        const chats: ChatsType = await this.prisma.chats.findUnique({
             where: {
                 id: chatId,
             },
             include: {
+                members: {
+                    select: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                lastname: true,
+                                profile_img: true,
+                            },
+                        },
+                    },
+                },
                 messages: {
                     select: {
                         content: true,
@@ -68,7 +79,10 @@ export class ChatsService {
             },
         });
 
-        return chats.messages;
+        return [
+            chats.members.find((member) => member.user.id !== sub),
+            ...chats.messages,
+        ];
     }
 
     /**
@@ -108,14 +122,17 @@ export class ChatsService {
             },
         });
 
-        // TODO: Сделать чтобы socket не подключал сразу всех пользователей,
-        //  потому что, из-за большого количества запросов сервер не может обрабатывать запросы сразу, а лишь только после перезагрузки страницы. Может это frontend виноват...посмотрим.
+        // Не добавлять чаты в которых нет сообщений.
+        const chats: ChatsType[] = allChatsUser.filter(
+            (chat) => chat.messages.length !== 0,
+        );
 
-        // TODO: Если чат с пользователем существует, но в нем нет сообщений.
-        if (allChatsUser.length === 0) {
+        // Если у пользователя еще нет чатов.
+        if (chats.length === 0) {
+            throw new ForbiddenException("No chats found");
         }
 
-        return allChatsUser.map((chat: ChatsType) => {
+        return chats.map((chat: ChatsType) => {
             return {
                 ...chat.members.find(
                     (member: UserType) => member.user.id !== sub,

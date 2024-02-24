@@ -34,8 +34,3 @@ export type FindMembershipType = {
     id: number;
     members: MembersType[];
 };
-
-export type GetMessagesType = {
-    id: number;
-    messages: MessageType[];
-};

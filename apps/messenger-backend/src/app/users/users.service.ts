@@ -31,6 +31,35 @@ export class UsersService {
     }
 
     /**
+     * Подготовка друзей. Дополнительная функция.
+     * @param id
+     */
+    async prepareFriends(id: number) {
+        const user = await this.prismaService.users.findFirst({
+            where: {
+                id,
+            },
+            include: {
+                friends: {
+                    include: {
+                        user: true,
+                    },
+                },
+                friendsOf: {
+                    include: {
+                        friend: true,
+                    },
+                },
+            },
+        });
+
+        return [
+            ...user.friends.map((friend) => friend.user),
+            ...user.friendsOf.map((friendOf) => friendOf.friend),
+        ];
+    }
+
+    /**
      * Получение всех пользователей.
      * @param id
      */
@@ -38,7 +67,7 @@ export class UsersService {
         // Получение всех пользователей.
         const allUsers: User[] = await this.prismaService.users.findMany();
         // Получение друзей пользователя.
-        const friends: User[] = await this.getFriends(id);
+        const friends: User[] = await this.prepareFriends(id);
 
         if (friends.length === 0) {
             return allUsers;
@@ -67,7 +96,7 @@ export class UsersService {
         const usersAll: User[] = await this.prismaService.users.findMany();
 
         // Получение друзей пользователя.
-        const friends: User[] = await this.getFriends(sub);
+        const friends: User[] = await this.prepareFriends(sub);
 
         // Фильтруем массив друзей, для поиска пользователей по схожему имени или фамилии.
         const users = usersAll.filter(
@@ -94,7 +123,7 @@ export class UsersService {
         const { sub } = request.user; // Получение id пользователя (аутентифицированного).
 
         // Получение друзей пользователя.
-        const friends: User[] = await this.getFriends(sub);
+        const friends: User[] = await this.prepareFriends(sub);
 
         // Фильтруем массив друзей, для поиска пользователей по схожему имени или фамилии.
         const findFriends: User[] = friends.filter(
@@ -113,33 +142,13 @@ export class UsersService {
      * @param id
      */
     async getFriends(id: number) {
-        const user = await this.prismaService.users.findFirst({
-            where: {
-                id,
-            },
-            include: {
-                friends: {
-                    include: {
-                        user: true,
-                    },
-                },
-                friendsOf: {
-                    include: {
-                        friend: true,
-                    },
-                },
-            },
-        });
+        const friends: User[] = await this.prepareFriends(id);
 
-        // Если массив с друзьями пуст выдаем ошибку.
-        if (!user.friendsOf && !user.friends) {
-            throw new NotFoundException("You haven't added any friends yet!");
+        if (friends.length === 0) {
+            throw new NotFoundException("Friend not added yet");
         }
-        // Возвращаем список друзей. Путем объединения двух массивов.
-        return [
-            ...user.friends.map((friend) => friend.user),
-            ...user.friendsOf.map((friendOf) => friendOf.friend),
-        ];
+
+        return friends;
     }
 
     // TODO: НАБУДУЩЕЕ Сделать отправку заявки на добавление в друзья.

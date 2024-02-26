@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    Delete,
     Get,
     Param,
     Post,
@@ -26,6 +27,15 @@ export class ChatsController {
         @Body() body: { content: string; chatId: string },
     ) {
         return this.chatsService.sendMessage(request, body);
+    }
+
+    /**
+     * Удаление сообщений.
+     * @param body
+     */
+    @Delete("delete-messages")
+    async deleteMessages(@Body() body: { chatId: string; messages: number[] }) {
+        return this.chatsService.deleteMessages(+body.chatId, body.messages);
     }
 
     /**

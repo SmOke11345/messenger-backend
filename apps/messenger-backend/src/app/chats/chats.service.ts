@@ -42,6 +42,23 @@ export class ChatsService {
     }
 
     /**
+     * Удаление сообщений.
+     * @param chatId
+     * @param messages
+     */
+    async deleteMessages(chatId: number, messages: number[]) {
+        return await this.prisma.messages.deleteMany({
+            where: {
+                id: {
+                    // Если ничего не будет найдено, то вернется null
+                    in: messages,
+                },
+                chatId,
+            },
+        });
+    }
+
+    /**
      * Получение сообщений из Б.Д.
      * @param request
      * @param chatId
@@ -68,14 +85,16 @@ export class ChatsService {
                         },
                     },
                 },
-                messages: {
-                    select: {
-                        content: true,
-                        senderId: true,
-                        createdAt: true,
-                        updatedAt: true,
-                    },
-                },
+                messages: true,
+                // messages: {
+                //     select: {
+                //         id: true,
+                //         content: true,
+                //         senderId: true,
+                //         createdAt: true,
+                //         updatedAt: true,
+                //     },
+                // },
             },
         });
 

@@ -4,6 +4,7 @@ import {
     Delete,
     Get,
     Param,
+    Patch,
     Post,
     Request,
     UseGuards,
@@ -36,6 +37,21 @@ export class ChatsController {
     @Delete("delete-messages")
     async deleteMessages(@Body() body: { chatId: string; messages: number[] }) {
         return this.chatsService.deleteMessages(+body.chatId, body.messages);
+    }
+
+    /**
+     * Изменение сообщения.
+     * @param body
+     */
+    @Patch("update-message")
+    async updateMessage(
+        @Body() body: { chatId: string; messageId: number; content: string },
+    ) {
+        return this.chatsService.updateMessage(
+            +body.chatId,
+            body.messageId,
+            body.content,
+        );
     }
 
     /**

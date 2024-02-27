@@ -28,7 +28,7 @@ export class ChatsService {
         await this.findMembership(sub, +payload.chatId); // Проверка является ли пользователь членом чата.
 
         // Проверка на пустое сообщение.
-        if (payload.content === "") {
+        if (payload.content.trim() === "") {
             throw new ForbiddenException("Message is empty");
         }
 
@@ -54,6 +54,29 @@ export class ChatsService {
                     in: messages,
                 },
                 chatId,
+            },
+        });
+    }
+
+    /**
+     * Изменение сообщения.
+     * @param chatId
+     * @param messageId
+     * @param content
+     */
+    async updateMessage(chatId: number, messageId: number, content: string) {
+        // Проверка на пустое сообщение.
+        if (content.trim() === "") {
+            return;
+        }
+
+        return this.prisma.messages.update({
+            where: {
+                id: messageId,
+                chatId,
+            },
+            data: {
+                content,
             },
         });
     }

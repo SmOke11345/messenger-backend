@@ -70,10 +70,15 @@ export class Gateways
     ) {
         // Если пользователи находятся в одном чате (комнате), то прослушиваем onMessage и получаем отправленное сообщение.
         this.server.to(payload.chatId).emit("onMessage", {
-            content: payload.content,
-            senderId: +payload.senderId,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            date: new Date(),
+            messages: [
+                {
+                    content: payload.content,
+                    senderId: +payload.senderId,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            ],
         });
     }
 
@@ -87,6 +92,8 @@ export class Gateways
     //         .to(payload.chatId)
     //         .emit("onDeleteMessage", payload.messageId);
     // }
+
+    // TODO: Добавить изменение сообщения.
 
     /**
      * Подключение к чату (комнате).

@@ -109,21 +109,24 @@ export class ChatsService {
                     },
                 },
                 messages: true,
-                // messages: {
-                //     select: {
-                //         id: true,
-                //         content: true,
-                //         senderId: true,
-                //         createdAt: true,
-                //         updatedAt: true,
-                //     },
-                // },
             },
         });
 
+        // Группировка сообщений по дате.
+        const groupMessage = chats.messages.reduce((acc, message) => {
+            const data = `${message.createdAt.getDate()}-${message.createdAt.getMonth()}-${message.createdAt.getFullYear()}`;
+            // Ищет новое значение дня и создает массив с новым значением дня,
+            // затем меняет значение data, => поиск осуществляется уже по новой дате.
+            if (!acc[data]) {
+                acc[data] = { date: data, messages: [] };
+            }
+            acc[data].messages.push(message);
+            return acc;
+        }, []);
+
         return [
             chats.members.find((member) => member.user.id !== sub),
-            ...chats.messages,
+            ...Object.values(groupMessage),
         ];
     }
 

@@ -11,6 +11,7 @@ import {
 
 import { Server, Socket } from "socket.io";
 import { Logger } from "@nestjs/common";
+import { ChatsService } from "../chats/chats.service";
 
 /*
    Сообщение на которое мы подписываемся newMessage.
@@ -35,6 +36,8 @@ export class Gateways
 
     private logger: Logger = new Logger("Gateways");
 
+    constructor(public chatsService: ChatsService) {}
+
     afterInit(server: any) {
         this.logger.log("Init");
     }
@@ -55,12 +58,14 @@ export class Gateways
         this.logger.log(`Client disconnected: ${client.id}`);
     }
 
+    // TODO: В socket после получение данных нужно создавать сообщение в бд, и возвращать его данные в socket.
+
     /**
      * Отправка сообщений.
      * @param payload
      */
     @SubscribeMessage("newMessage")
-    onNewMessage(
+    async onNewMessage(
         @MessageBody()
         payload: {
             content: string;
@@ -68,15 +73,20 @@ export class Gateways
             senderId: string;
         },
     ) {
+        const newMessage = await this.chatsService.sendMessage(
+            payload.senderId,
+            {
+                chatId: payload.chatId,
+                content: payload.content,
+            },
+        );
+        console.log(newMessage);
         // Если пользователи находятся в одном чате (комнате), то прослушиваем onMessage и получаем отправленное сообщение.
         this.server.to(payload.chatId).emit("onMessage", {
             date: new Date(),
             messages: [
                 {
-                    content: payload.content,
-                    senderId: +payload.senderId,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
+                    ...newMessage,
                 },
             ],
         });
@@ -94,6 +104,24 @@ export class Gateways
     // }
 
     // TODO: Добавить изменение сообщения.
+
+    @SubscribeMessage("updateMessage")
+    async onUpdateMessage(
+        @MessageBody()
+        payload: {
+            messageId: number;
+            content: string;
+            chatId: string;
+        },
+    ) {
+        const updatedMessage = await this.chatsService.updateMessage(
+            +payload.chatId,
+            payload.messageId,
+            payload.content,
+        );
+
+        this.server.to(payload.chatId).emit("onUpdateMessage", updatedMessage);
+    }
 
     /**
      * Подключение к чату (комнате).

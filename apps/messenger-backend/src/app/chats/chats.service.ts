@@ -13,19 +13,20 @@ export class ChatsService {
 
     /**
      * Отправка сообщений в Б.Д.
-     * @param request
+     * @param senderId
      * @param payload
      */
     async sendMessage(
-        request: any,
+        // request: any,
+        senderId: string,
         payload: {
             content: string;
             chatId: string;
         },
     ) {
-        const { sub } = request.user; // Получение id пользователя (аутентифицированного).
+        // const { sub } = request.user; // Получение id пользователя (аутентифицированного).
 
-        await this.findMembership(sub, +payload.chatId); // Проверка является ли пользователь членом чата.
+        await this.findMembership(+senderId, +payload.chatId); // Проверка является ли пользователь членом чата.
 
         // Проверка на пустое сообщение.
         if (payload.content.trim() === "") {
@@ -36,7 +37,7 @@ export class ChatsService {
             data: {
                 content: payload.content,
                 chatId: +payload.chatId,
-                senderId: sub,
+                senderId: +senderId,
             },
         });
     }
@@ -114,7 +115,9 @@ export class ChatsService {
 
         // Группировка сообщений по дате.
         const groupMessage = chats.messages.reduce((acc, message) => {
-            const data = `${message.createdAt.getDate()}-${message.createdAt.getMonth()}-${message.createdAt.getFullYear()}`;
+            const data = `${message.createdAt.getDate()}-${
+                message.createdAt.getMonth() + 1
+            }-${message.createdAt.getFullYear()}`;
             // Ищет новое значение дня и создает массив с новым значением дня,
             // затем меняет значение data, => поиск осуществляется уже по новой дате.
             if (!acc[data]) {

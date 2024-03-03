@@ -16,19 +16,19 @@ import { JwtAuthGuard } from "../auth/guard/auth.guard";
 export class ChatsController {
     constructor(private chatsService: ChatsService) {}
 
-    /**
-     * Отправка сообщений в Б.Д.
-     * @param body
-     * @param request
-     */
-    @UseGuards(JwtAuthGuard)
-    @Post("send-message")
-    async sendMessage(
-        @Request() request: any,
-        @Body() body: { content: string; chatId: string },
-    ) {
-        return this.chatsService.sendMessage(request, body);
-    }
+    // /**
+    //  * Отправка сообщений в Б.Д.
+    //  * @param body
+    //  * @param request
+    //  */
+    // @UseGuards(JwtAuthGuard)
+    // @Post("send-message")
+    // async sendMessage(
+    //     // @Request() request: any,
+    //     @Body() body: { content: string; chatId: string },
+    // ) {
+    //     return this.chatsService.sendMessage(request, body);
+    // }
 
     /**
      * Удаление сообщений.
@@ -39,20 +39,20 @@ export class ChatsController {
         return this.chatsService.deleteMessages(+body.chatId, body.messages);
     }
 
-    /**
-     * Изменение сообщения.
-     * @param body
-     */
-    @Patch("update-message")
-    async updateMessage(
-        @Body() body: { chatId: string; messageId: number; content: string },
-    ) {
-        return this.chatsService.updateMessage(
-            +body.chatId,
-            body.messageId,
-            body.content,
-        );
-    }
+    // /**
+    //  * Изменение сообщения.
+    //  * @param body
+    //  */
+    // @Patch("update-message")
+    // async updateMessage(
+    //     @Body() body: { chatId: string; messageId: number; content: string },
+    // ) {
+    //     return this.chatsService.updateMessage(
+    //         +body.chatId,
+    //         body.messageId,
+    //         body.content,
+    //     );
+    // }
 
     /**
      * Получение сообщений из Б.Д.

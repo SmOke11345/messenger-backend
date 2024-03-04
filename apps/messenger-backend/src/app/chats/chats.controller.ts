@@ -4,8 +4,6 @@ import {
     Delete,
     Get,
     Param,
-    Patch,
-    Post,
     Request,
     UseGuards,
 } from "@nestjs/common";
@@ -16,20 +14,6 @@ import { JwtAuthGuard } from "../auth/guard/auth.guard";
 export class ChatsController {
     constructor(private chatsService: ChatsService) {}
 
-    // /**
-    //  * Отправка сообщений в Б.Д.
-    //  * @param body
-    //  * @param request
-    //  */
-    // @UseGuards(JwtAuthGuard)
-    // @Post("send-message")
-    // async sendMessage(
-    //     // @Request() request: any,
-    //     @Body() body: { content: string; chatId: string },
-    // ) {
-    //     return this.chatsService.sendMessage(request, body);
-    // }
-
     /**
      * Удаление сообщений.
      * @param body
@@ -38,21 +22,6 @@ export class ChatsController {
     async deleteMessages(@Body() body: { chatId: string; messages: number[] }) {
         return this.chatsService.deleteMessages(+body.chatId, body.messages);
     }
-
-    // /**
-    //  * Изменение сообщения.
-    //  * @param body
-    //  */
-    // @Patch("update-message")
-    // async updateMessage(
-    //     @Body() body: { chatId: string; messageId: number; content: string },
-    // ) {
-    //     return this.chatsService.updateMessage(
-    //         +body.chatId,
-    //         body.messageId,
-    //         body.content,
-    //     );
-    // }
 
     /**
      * Получение сообщений из Б.Д.

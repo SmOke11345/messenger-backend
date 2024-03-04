@@ -103,8 +103,6 @@ export class Gateways
     //         .emit("onDeleteMessage", payload.messageId);
     // }
 
-    // TODO: Добавить изменение сообщения.
-
     @SubscribeMessage("updateMessage")
     async onUpdateMessage(
         @MessageBody()
@@ -120,7 +118,14 @@ export class Gateways
             payload.content,
         );
 
-        this.server.to(payload.chatId).emit("onUpdateMessage", updatedMessage);
+        this.server.to(payload.chatId).emit("onUpdateMessage", {
+            date: new Date(),
+            messages: [
+                {
+                    ...updatedMessage,
+                },
+            ],
+        });
     }
 
     /**

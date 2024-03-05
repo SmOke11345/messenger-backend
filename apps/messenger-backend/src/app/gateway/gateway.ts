@@ -33,7 +33,6 @@ export class Gateways
     // Прямой доступ к экземпляру сервера.
     @WebSocketServer()
     server: Server;
-
     private logger: Logger = new Logger("Gateways");
 
     constructor(public chatsService: ChatsService) {}
@@ -58,8 +57,6 @@ export class Gateways
         this.logger.log(`Client disconnected: ${client.id}`);
     }
 
-    // TODO: В socket после получение данных нужно создавать сообщение в бд, и возвращать его данные в socket.
-
     /**
      * Отправка сообщений.
      * @param payload
@@ -80,10 +77,14 @@ export class Gateways
                 content: payload.content,
             },
         );
-        console.log(newMessage);
+
+        const date = `${new Date().getDate()}-${
+            new Date().getMonth() + 1
+        }-${new Date().getFullYear()}`;
+
         // Если пользователи находятся в одном чате (комнате), то прослушиваем onMessage и получаем отправленное сообщение.
         this.server.to(payload.chatId).emit("onMessage", {
-            date: new Date(),
+            date,
             messages: [
                 {
                     ...newMessage,
@@ -92,16 +93,18 @@ export class Gateways
         });
     }
 
-    // TODO: Добавить удаление сообщений.
-
-    // @SubscribeMessage("deleteMessage")
-    // onDeleteMessage(
-    //     @MessageBody() payload: { messageId: number; chatId: string },
-    // ) {
-    //     this.server
-    //         .to(payload.chatId)
-    //         .emit("onDeleteMessage", payload.messageId);
-    // }
+    @SubscribeMessage("deleteMessage")
+    async onDeleteMessage(
+        @MessageBody() payload: { messageId: number[]; chatId: string },
+    ) {
+        await this.chatsService.deleteMessages(
+            +payload.chatId,
+            payload.messageId,
+        );
+        this.server
+            .to(payload.chatId)
+            .emit("onDeleteMessage", payload.messageId);
+    }
 
     @SubscribeMessage("updateMessage")
     async onUpdateMessage(
@@ -118,8 +121,19 @@ export class Gateways
             payload.content,
         );
 
+        const getMessageDate = await this.chatsService.getMessageDate(
+            +payload.chatId,
+            payload.messageId,
+        );
+
+        const { createdAt } = getMessageDate.messages[0];
+
+        const date = `${createdAt.getDate()}-${
+            createdAt.getMonth() + 1
+        }-${createdAt.getFullYear()}`;
+
         this.server.to(payload.chatId).emit("onUpdateMessage", {
-            date: new Date(),
+            date,
             messages: [
                 {
                     ...updatedMessage,

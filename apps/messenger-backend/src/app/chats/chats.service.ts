@@ -83,57 +83,6 @@ export class ChatsService {
     }
 
     /**
-     * Получение сообщений из Б.Д.
-     * @param request
-     * @param chatId
-     */
-    async getMessages(request: any, chatId: number) {
-        const { sub } = request.user; // Получение id пользователя (аутентифицированного).
-
-        await this.findMembership(sub, chatId); // Проверка является ли пользователь членом чата.
-
-        const chats: ChatsType = await this.prisma.chats.findUnique({
-            where: {
-                id: chatId,
-            },
-            include: {
-                members: {
-                    select: {
-                        user: {
-                            select: {
-                                id: true,
-                                name: true,
-                                lastname: true,
-                                profile_img: true,
-                            },
-                        },
-                    },
-                },
-                messages: true,
-            },
-        });
-
-        // Группировка сообщений по дате.
-        const groupMessage = chats.messages.reduce((acc, message) => {
-            const data = `${message.createdAt.getDate()}-${
-                message.createdAt.getMonth() + 1
-            }-${message.createdAt.getFullYear()}`;
-            // Ищет новое значение дня и создает массив с новым значением дня,
-            // затем меняет значение data, => поиск осуществляется уже по новой дате.
-            if (!acc[data]) {
-                acc[data] = { date: data, messages: [] };
-            }
-            acc[data].messages.push(message);
-            return acc;
-        }, []);
-
-        return [
-            chats.members.find((member) => member.user.id !== sub),
-            ...Object.values(groupMessage),
-        ];
-    }
-
-    /**
      * Получение списка всех чатов.
      */
     async getAllChats(request: any) {
@@ -265,5 +214,79 @@ export class ChatsService {
         }
 
         return true;
+    }
+
+    /**
+     * Получение даты по id сообщения.
+     * @param chatId
+     * @param messageId
+     */
+    getMessageDate(chatId: number, messageId: number) {
+        return this.prisma.chats.findFirst({
+            where: {
+                id: chatId,
+            },
+            include: {
+                messages: {
+                    where: {
+                        id: messageId,
+                    },
+                },
+            },
+        });
+    }
+
+    /**
+     * Получение сообщений из Б.Д.
+     * @param request
+     * @param chatId
+     */
+    async getMessages(request: any, chatId: number) {
+        const { sub } = request.user; // Получение id пользователя (аутентифицированного).
+
+        await this.findMembership(sub, chatId); // Проверка является ли пользователь членом чата.
+
+        const chats: ChatsType = await this.prisma.chats.findUnique({
+            where: {
+                id: chatId,
+            },
+            include: {
+                members: {
+                    select: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                lastname: true,
+                                profile_img: true,
+                            },
+                        },
+                    },
+                },
+                messages: true,
+            },
+        });
+
+        // Группировка сообщений по дате.
+        const groupMessage = chats.messages.reduce((acc, message) => {
+            const data = `${message.createdAt.getDate()}-${
+                message.createdAt.getMonth() + 1
+            }-${message.createdAt.getFullYear()}`;
+            // Ищет новое значение дня и создает массив с новым значением дня,
+            // затем меняет значение data, => поиск осуществляется уже по новой дате.
+            if (!acc[data]) {
+                acc[data] = { date: data, messages: [] };
+            }
+            acc[data].messages.push(message);
+            return acc;
+        }, []);
+
+        // TODO: Решить что-то с сортировкой сообщений. Сейчас идет от большего к меньшему. => 21.02. потом 5.03. потом 3.03.
+        // а где-то нормально сортируется...м-да.
+
+        return [
+            chats.members.find((member) => member.user.id !== sub),
+            ...Object.values(groupMessage),
+        ];
     }
 }

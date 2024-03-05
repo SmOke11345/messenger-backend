@@ -14,14 +14,14 @@ import { JwtAuthGuard } from "../auth/guard/auth.guard";
 export class ChatsController {
     constructor(private chatsService: ChatsService) {}
 
-    /**
-     * Удаление сообщений.
-     * @param body
-     */
-    @Delete("delete-messages")
-    async deleteMessages(@Body() body: { chatId: string; messages: number[] }) {
-        return this.chatsService.deleteMessages(+body.chatId, body.messages);
-    }
+    // /**
+    //  * Удаление сообщений.
+    //  * @param body
+    //  */
+    // @Delete("delete-messages")
+    // async deleteMessages(@Body() body: { chatId: string; messages: number[] }) {
+    //     return this.chatsService.deleteMessages(+body.chatId, body.messages);
+    // }
 
     /**
      * Получение сообщений из Б.Д.

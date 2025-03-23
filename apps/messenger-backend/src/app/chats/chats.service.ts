@@ -4,8 +4,10 @@ import {
     ChatsType,
     FindMembershipType,
     IChatMemberships,
+    IGroupMessage,
+    MessageType,
     UserType,
-} from "./chatsTypes";
+} from "../models/chatsTypes";
 
 @Injectable()
 export class ChatsService {
@@ -88,7 +90,7 @@ export class ChatsService {
     async getAllChats(request: any) {
         const { sub } = request.user; // Получение id пользователя (аутентифицированного).
 
-        const allChatsUser: ChatsType[] = await this.prisma.chats.findMany({
+        const allChatsUser = await this.prisma.chats.findMany({
             where: {
                 members: {
                     some: {
@@ -109,19 +111,13 @@ export class ChatsService {
                         },
                     },
                 },
-                messages: {
-                    select: {
-                        senderId: true,
-                        createdAt: true,
-                        content: true,
-                    },
-                },
+                messages: true,
             },
         });
 
         // Не добавлять чаты в которых нет сообщений.
         const chats: ChatsType[] = allChatsUser.filter(
-            (chat) => chat.messages.length !== 0,
+            (chat: ChatsType) => chat.messages.length !== 0,
         );
 
         // Если у пользователя еще нет чатов.
@@ -171,7 +167,9 @@ export class ChatsService {
         }
 
         // Создаем новую комнату чата.
-        const newChat: { id: number } = await this.prisma.chats.create({
+        const newChat: {
+            id: number;
+        } = await this.prisma.chats.create({
             data: {},
         });
 
@@ -268,24 +266,31 @@ export class ChatsService {
         });
 
         // Группировка сообщений по дате.
-        const groupMessage = chats.messages.reduce((acc, message) => {
-            const data = `${message.createdAt.getDate()}-${
-                message.createdAt.getMonth() + 1
-            }-${message.createdAt.getFullYear()}`;
-            // Ищет новое значение дня и создает массив с новым значением дня,
-            // затем меняет значение data, => поиск осуществляется уже по новой дате.
-            if (!acc[data]) {
-                acc[data] = { date: data, messages: [] };
-            }
-            acc[data].messages.push(message);
-            return acc;
-        }, []);
+        const groupMessage: IGroupMessage[] = chats.messages.reduce(
+            (acc, message: MessageType) => {
+                const data: string = `${message.createdAt.getDate()}-${
+                    message.createdAt.getMonth() + 1
+                }-${message.createdAt.getFullYear()}`;
+                // Ищет новое значение дня и создает массив с новым значением дня,
+                // затем меняет значение data, => поиск осуществляется уже по новой дате.
+                if (!acc[data]) {
+                    acc[data] = { date: data, messages: [] };
+                }
+                acc[data].messages.push(message);
+                return acc;
+            },
+            [],
+        );
+
+        // Сортировка сообщений группы по id сообщения.
+        Object.values(groupMessage).map((item: IGroupMessage) => {
+            item.messages.sort((a, b) => a.id - b.id);
+        });
 
         // TODO: Решить что-то с сортировкой сообщений. Сейчас идет от большего к меньшему. => 21.02. потом 5.03. потом 3.03.
-        // а где-то нормально сортируется...м-да.
 
         return [
-            chats.members.find((member) => member.user.id !== sub),
+            chats.members.find((member: UserType) => member.user.id !== sub),
             ...Object.values(groupMessage),
         ];
     }

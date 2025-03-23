@@ -15,9 +15,12 @@ type MembersType = {
 };
 
 export type MessageType = {
+    id: number;
     content: string;
     senderId: number;
+    chatId: number;
     createdAt: Date;
+    updatedAt: Date;
 };
 
 export type ChatsType = {
@@ -34,3 +37,8 @@ export type FindMembershipType = {
     id: number;
     members: MembersType[];
 };
+
+export interface IGroupMessage {
+    date: string;
+    messages: MessageType[];
+}

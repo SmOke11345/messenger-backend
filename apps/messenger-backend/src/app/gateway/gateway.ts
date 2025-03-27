@@ -10,6 +10,7 @@ import {
 } from "@nestjs/websockets";
 
 import { Server, Socket } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 import { Logger } from "@nestjs/common";
 import { ChatsService } from "../chats/chats.service";
 
@@ -37,8 +38,12 @@ export class Gateways
 
     constructor(public chatsService: ChatsService) {}
 
-    afterInit(server: any) {
-        this.logger.log("Init");
+    afterInit() {
+        this.logger.log("Socket.io server Init");
+        // Подключение socket.io/admin-ui
+        instrument(this.server, {
+            auth: false,
+        });
     }
 
     /**

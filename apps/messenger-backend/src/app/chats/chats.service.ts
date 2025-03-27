@@ -126,11 +126,16 @@ export class ChatsService {
         }
 
         return chats.map((chat: ChatsType) => {
+            const members = chat.members.find(
+                (member: UserType) => member.user.id !== sub,
+            );
+            const lastMessage = chat.messages
+                .sort((a, b) => a.id - b.id)
+                .at(-1);
+
             return {
-                ...chat.members.find(
-                    (member: UserType) => member.user.id !== sub,
-                ),
-                lastMessage: chat.messages.at(-1),
+                ...members,
+                lastMessage,
             };
         });
     }
@@ -286,8 +291,6 @@ export class ChatsService {
         Object.values(groupMessage).map((item: IGroupMessage) => {
             item.messages.sort((a, b) => a.id - b.id);
         });
-
-        // TODO: Решить что-то с сортировкой сообщений. Сейчас идет от большего к меньшему. => 21.02. потом 5.03. потом 3.03.
 
         return [
             chats.members.find((member: UserType) => member.user.id !== sub),
